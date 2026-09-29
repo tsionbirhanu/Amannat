@@ -1,9 +1,10 @@
 from fastapi import FastAPI
-from app.routers import auth
+from app.routers import auth, workers
 
 app = FastAPI(title="Amannat API", version="0.2")
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(workers.router, prefix="/workers", tags=["workers"])
 
 
 @app.get("/health")
