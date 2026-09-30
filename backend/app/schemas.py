@@ -1,6 +1,10 @@
+from dataclasses import Field
+
+from app.models import gen_id, utc_now
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List, Literal
+from sqlmodel import SQLModel
 
 class OtpRequest(BaseModel):
     phone: str
@@ -62,3 +66,18 @@ class AgencyRead(BaseModel):
     email: Optional[str] = None
     location: Optional[str] = None
     verification_status: str
+
+class ReportCreate(BaseModel):
+    agency_id: str
+    category: Literal[
+        "wage_nonpayment",
+        "contract_substitution",
+        "abuse",
+        "passport_confiscation",
+    ]
+    description: Optional[str] = None
+
+class AppealCreate(BaseModel):
+    message: str
+class ShortlistCreate(BaseModel):
+    agency_id: str

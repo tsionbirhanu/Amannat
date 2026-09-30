@@ -75,10 +75,10 @@ class Report(SQLModel, table=True):
     category: (
         str  # wage_nonpayment | contract_substitution | abuse | passport_confiscation
     )
+    description: Optional[str] = None
     verified_status: str = Field(default="pending")
     created_at: datetime = Field(default_factory=utc_now)
-
-
+    
 class Appeal(SQLModel, table=True):
     id: str = Field(default_factory=gen_id, primary_key=True)
     agency_id: str = Field(foreign_key="agency.id")
