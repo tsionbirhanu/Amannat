@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 class OtpRequest(BaseModel):
     phone: str
@@ -45,3 +45,20 @@ class RecordExport(BaseModel):
     worker: dict
     contracts: List[dict]
     guardian_contacts: List[dict]
+
+class AgencyCreate(BaseModel):
+    name: str
+    license_no: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    location: Optional[str] = None
+    verification_status: Optional[Literal["unverified", "verified", "flagged"]] = "unverified"
+
+class AgencyRead(BaseModel):
+    id: str
+    name: str
+    license_no: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    location: Optional[str] = None
+    verification_status: str

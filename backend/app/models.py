@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -38,7 +39,10 @@ class GuardianContact(SQLModel, table=True):
 class Agency(SQLModel, table=True):
     id: str = Field(default_factory=gen_id, primary_key=True)
     name: str
-    license_no: str | None = Field(default=None, unique=True)
+    license_no: Optional[str] = Field(default=None, unique=True)
+    phone: Optional[str] = Field(default=None, index=True)
+    email: Optional[str] = Field(default=None)
+    location: Optional[str] = Field(default=None)
     verification_status: str = Field(
         default="unverified"
     )  # unverified | verified | flagged
@@ -47,12 +51,12 @@ class Agency(SQLModel, table=True):
 class Contract(SQLModel, table=True):
     id: str = Field(default_factory=gen_id, primary_key=True)
     worker_id: str = Field(foreign_key="worker.id")
-    agency_id: str | None = Field(default=None, foreign_key="agency.id")
+    agency_id: Optional[str] = Field(default=None, foreign_key="agency.id")
     wage: float
     terms_json: str
     start_date: datetime
-    end_date: datetime | None = None
-    document_ref: str | None = None
+    end_date: Optional[datetime] = None
+    document_ref: Optional[str] = None
 
 
 class WageLog(SQLModel, table=True):
@@ -60,13 +64,13 @@ class WageLog(SQLModel, table=True):
     contract_id: str = Field(foreign_key="contract.id")
     amount: float
     paid_on: datetime
-    note: str | None = None
+    note: Optional[str] = None
 
 
 class Report(SQLModel, table=True):
     id: str = Field(default_factory=gen_id, primary_key=True)
     worker_pseudo_id: str
-    worker_id_raw: str | None = None  # council-only, never exposed publicly
+    worker_id_raw: Optional[str] = None  # council-only, never exposed publicly
     agency_id: str = Field(foreign_key="agency.id")
     category: (
         str  # wage_nonpayment | contract_substitution | abuse | passport_confiscation
