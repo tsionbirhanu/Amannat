@@ -2,10 +2,10 @@ import Link from 'next/link';
 
 export default function Navigation() {
   return (
-    <header className="nav-container glass">
+    <header className="nav-container">
       <div className="logo">
         <Link href="/">
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Amannat</h1>
+          <h1 style={{ fontSize: '20px', color: '#ffffff', margin: 0 }}>Amannat</h1>
         </Link>
       </div>
       <nav className="nav-links">

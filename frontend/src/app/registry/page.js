@@ -8,29 +8,36 @@ export default function RegistryPage() {
       <h1 className="page-title">Trust Registry</h1>
       <p className="page-description">Verified history on agencies and employers.</p>
       
-      <div className="glass" style={{ padding: '2rem' }}>
-        <h2>Search</h2>
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+      <div className="card">
+        <h2 style={{ marginBottom: 'var(--space-sm)' }}>Search</h2>
+        
+        <div className="input-group">
           <input 
             type="text" 
             placeholder="Search agency by name or license number..." 
-            style={{ 
-              flex: 1, 
-              padding: '0.75rem', 
-              borderRadius: '8px', 
-              border: 'none', 
-              background: 'rgba(0,0,0,0.2)', 
-              color: 'white' 
-            }} 
           />
+          <button className="btn btn-voice" aria-label="Dictate search query" style={{ minWidth: '52px', padding: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            </svg>
+          </button>
           <button className="btn btn-primary">Search</button>
         </div>
         
-        <div style={{ marginTop: '2rem' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Recent Reports</h3>
-          <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-            <p style={{ color: '#f8fafc', fontWeight: 'bold' }}>Agency Al-Aman</p>
-            <p style={{ color: '#ef4444', fontSize: '0.875rem' }}>Flag: 3 wage-related reports in the last 6 months.</p>
+        <div style={{ marginTop: 'var(--space-xl)' }}>
+          <h3 style={{ marginBottom: 'var(--space-md)' }}>Recent Reports</h3>
+          
+          <div style={{ padding: 'var(--space-md)', background: 'var(--surface-container-low)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xs)' }}>
+              <p style={{ color: 'var(--primary-color)', fontWeight: '700' }}>Agency Al-Aman</p>
+              <div className="audio-pill">
+                ▶ 0:42 • አማርኛ
+              </div>
+            </div>
+            <p style={{ color: 'var(--emergency-color)', fontSize: '14px', fontWeight: '500' }}>
+              <span aria-hidden="true">⚠️</span> Flag: 3 wage-related reports in the last 6 months.
+            </p>
           </div>
         </div>
       </div>
