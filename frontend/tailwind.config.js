@@ -10,6 +10,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
+          50: '#F0F7F4',
+          100: '#DDEFE7',
+          200: '#BDDFD0',
+          500: '#2A6F55',
+          700: '#184736',
+          800: '#143C2E',
+          900: '#0E291F',
+          // keep old ones
           dark: '#0F172A',
           navy: '#1E293B',
           emerald: '#059669',
@@ -17,6 +25,19 @@ module.exports = {
           bgLight: '#F8FAFC',
           sidebar: '#FFFFFF',
           cardBg: '#FFFFFF',
+        },
+        sand: {
+          50: '#F9F8F5',
+          100: '#F4F2EC',
+          200: '#EAE6DC',
+          300: '#DDD8CB'
+        },
+        status: {
+          activeBg: '#EAF5F0',
+          activeText: '#186244',
+          warningBg: '#FEF6E7',
+          warningText: '#9A6319',
+          warningBorder: '#F2C68A'
         },
         "surface-container-highest": "#e0e3e5",
         "primary-container": "#1e293b",
