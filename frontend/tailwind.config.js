@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -7,9 +8,6 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-      },
       colors: {
         brand: {
           dark: '#0F172A',
@@ -19,7 +17,100 @@ module.exports = {
           bgLight: '#F8FAFC',
           sidebar: '#FFFFFF',
           cardBg: '#FFFFFF',
-        }
+        },
+        "surface-container-highest": "#e0e3e5",
+        "primary-container": "#1e293b",
+        "error": "#ba1a1a",
+        "surface-container-low": "#f2f4f6",
+        "on-tertiary": "#ffffff",
+        "outline": "#75777d",
+        "surface-variant": "#e0e3e5",
+        "on-secondary-container": "#663500",
+        "on-tertiary-container": "#24a375",
+        "surface-bright": "#f7f9fb",
+        "tertiary-container": "#00301f",
+        "tertiary-fixed-dim": "#68dba9",
+        "on-secondary": "#ffffff",
+        "surface-container-high": "#e6e8ea",
+        "surface-tint": "#545f73",
+        "tertiary-fixed": "#85f8c4",
+        "on-surface-variant": "#45474c",
+        "inverse-primary": "#bcc7de",
+        "on-primary-fixed": "#111c2d",
+        "on-surface": "#191c1e",
+        "on-primary-fixed-variant": "#3c475a",
+        "tertiary": "#00190e",
+        "on-primary": "#ffffff",
+        "on-secondary-fixed": "#2f1500",
+        "primary": "#091426",
+        "surface-container": "#eceef0",
+        "outline-variant": "#c5c6cd",
+        "secondary-fixed-dim": "#ffb77d",
+        "background": "#f7f9fb",
+        "secondary": "#904d00",
+        "on-primary-container": "#8590a6",
+        "on-error": "#ffffff",
+        "inverse-on-surface": "#eff1f3",
+        "error-container": "#ffdad6",
+        "surface": "#f7f9fb",
+        "on-error-container": "#93000a",
+        "on-tertiary-fixed-variant": "#005137",
+        "surface-container-lowest": "#ffffff",
+        "secondary-fixed": "#ffdcc3",
+        "primary-fixed": "#d8e3fb",
+        "on-secondary-fixed-variant": "#6e3900",
+        "inverse-surface": "#2d3133",
+        "on-background": "#191c1e",
+        "secondary-container": "#fe932c",
+        "surface-dim": "#d8dadc",
+        "on-tertiary-fixed": "#002114",
+        "primary-fixed-dim": "#bcc7de"
+      },
+      borderRadius: {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      spacing: {
+        "space-lg": "1.5rem",
+        "margin-desktop": "3rem",
+        "space-xl": "2.5rem",
+        "margin": "1rem",
+        "space-md": "1rem",
+        "margin-tablet": "2rem",
+        "space-xs": "0.25rem",
+        "gutter-desktop": "2rem",
+        "gutter": "1rem",
+        "space-sm": "0.5rem",
+        "gutter-tablet": "1.5rem"
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        "headline-sm": ["Plus Jakarta Sans"],
+        "body-lg": ["Noto Sans"],
+        "display": ["Plus Jakarta Sans"],
+        "headline-md": ["Plus Jakarta Sans"],
+        "body-sm": ["Noto Sans"],
+        "headline-lg": ["Plus Jakarta Sans"],
+        "label-lg": ["Noto Sans"],
+        "headline-lg-mobile": ["Plus Jakarta Sans"],
+        "body-md": ["Noto Sans"],
+        "audio-timestamp": ["Noto Sans"],
+        "label-md": ["Noto Sans"]
+      },
+      fontSize: {
+        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+        "display": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+        "headline-lg": ["26px", { "lineHeight": "34px", "fontWeight": "700" }],
+        "label-lg": ["15px", { "lineHeight": "20px", "fontWeight": "600" }],
+        "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "700" }],
+        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+        "audio-timestamp": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }]
       }
     }
   },
