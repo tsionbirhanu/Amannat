@@ -49,7 +49,7 @@ export default function SafetyPage() {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="px-space-lg lg:px-space-xl py-space-xl max-w-7xl mx-auto w-full flex flex-col gap-space-xl">
+      <div className="flex flex-col gap-space-xl w-full">
         
         {/* 1. WELCOME & STATUS BANNER */}
         <section className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 transition-all">

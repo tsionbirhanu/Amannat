@@ -16,7 +16,7 @@ export default function ContractAndWagesPage() {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-xl px-space-lg lg:px-space-xl pt-space-lg">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-xl">
         <div className="flex flex-col">
           <div className="flex items-center gap-space-sm mb-space-xs">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-primary">
@@ -39,7 +39,7 @@ export default function ContractAndWagesPage() {
         </div>
       </div>
 
-      <div className="px-space-lg lg:px-space-xl pb-space-xl max-w-7xl mx-auto w-full">
+      <div className="w-full">
         {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-xl">
           <div className="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">

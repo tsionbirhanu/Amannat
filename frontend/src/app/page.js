@@ -1,445 +1,463 @@
-'use client';
-import { useState, useEffect } from 'react';
-
 export default function Home() {
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [micStatus, setMicStatus] = useState("Tap to Speak");
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        const exitBtn = document.querySelector('button[title="Quick Disguise Exit"]');
-        if (exitBtn) {
-          exitBtn.click();
-        } else {
-          document.body.style.display = 'none';
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleCheckIn = () => {
-    setIsCheckedIn(true);
-    setTimeout(() => {
-      setIsCheckedIn(false);
-    }, 3000);
-  };
-
-  const toggleListening = () => {
-    setIsListening(!isListening);
-    if (!isListening) {
-      setMicStatus("Listening in English...");
-    } else {
-      setMicStatus("Processing speech prompt...");
-      setTimeout(() => {
-        setMicStatus("Tap to Speak");
-      }, 1500);
-    }
-  };
-
-  const handlePresetClick = () => {
-    setMicStatus("Analyzing query...");
-    setTimeout(() => {
-      setMicStatus("Audio response ready");
-    }, 1000);
-  };
-
   return (
-    <div className="flex flex-col w-full">
-      <div className="px-space-lg lg:px-space-xl py-space-xl max-w-7xl mx-auto w-full flex flex-col gap-space-xl">
-        
-        {/* 1. WELCOME & STATUS BANNER */}
-        <section className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 transition-all">
-          <div className="flex flex-col gap-2 min-w-0">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-headline-lg text-headline-lg text-primary tracking-tight">Welcome back, Bethlehem</h1>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low">
-                <span className="w-2.5 h-2.5 rounded-full bg-on-tertiary-container animate-ping"></span>
-                <span className="w-2 h-2 rounded-full bg-on-tertiary-container -ml-3.5"></span>
-                <span className="font-label-md text-label-md text-on-surface">Status: Safe & Synced</span>
+    <main className="p-8 space-y-6 max-w-7xl mx-auto w-full">
+      {/* BEGIN: WelcomeBanner */}
+      <section className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, Bethlehem</h2>
+            <span className="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-medium text-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span className="">Status: Safe & Synced</span>
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 font-normal">
+            Worker Safety & Portable Records · Riyadh, Saudi Arabia
+          </p>
+          <div className="flex items-center space-x-1.5 text-xs text-slate-600 pt-1">
+            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+            </svg>
+            <span className="">Next scheduled check-in: <strong className="text-slate-800 font-semibold">Sunday at 6:00 PM</strong></span>
+          </div>
+        </div>
+        {/* Action Buttons */}
+        <div className="flex items-center space-x-3 self-start md:self-center flex-shrink-0">
+          <button className="inline-flex items-center space-x-2 bg-[#0d1e32] hover:bg-[#142842] text-white px-5 py-3 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-sm">
+            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+            </svg>
+            <span className="">Check-in Now (I am safe)</span>
+          </button>
+          <button className="inline-flex items-center space-x-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 px-5 py-3 rounded-xl font-semibold text-xs tracking-wide transition-all">
+            <svg className="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round"></path>
+            </svg>
+            <span className="">Hold for SOS</span>
+          </button>
+        </div>
+      </section>
+
+      {/* BEGIN: MetricSummaryCards */}
+      <section aria-label="Metric Summary" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1 */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-600">Wages Received</span>
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" width="20" x="2" y="5"></rect>
+                <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div className="flex items-baseline space-x-1.5">
+              <span className="text-2xl font-bold text-slate-900">$2,800</span>
+              <span className="text-xs font-medium text-slate-400">/ $3,200</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: '87.5%' }}></div>
+            </div>
+          </div>
+          <p className="text-xs font-medium text-emerald-600 pt-0.5">October salary logged (90% on time)</p>
+        </div>
+
+        {/* Card 2 */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-600">Contract Validity</span>
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="text-2xl font-bold text-slate-900 leading-none">16 Months</span>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Remaining on term</p>
+          </div>
+          <p className="text-xs font-medium text-emerald-600 pt-0.5">Bilateral agreement verified</p>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-600">Trust Registry</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="text-xl font-bold text-slate-900 leading-tight block">Agency Verified</span>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Ethio-Gulf Bilateral Agency</p>
+          </div>
+          <p className="text-xs font-semibold text-slate-800 pt-0.5">Grade A Credential</p>
+        </div>
+
+        {/* Card 4 */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-600">Safety Status</span>
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+          <div>
+            <span className="text-2xl font-bold text-slate-900 leading-none">All 5 Active</span>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Trusted safety guardians</p>
+          </div>
+          <p className="text-xs font-medium text-emerald-600 pt-0.5">Consular hotline standby</p>
+        </div>
+      </section>
+
+      {/* BEGIN: LowerTwoColumnSection */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <span className="p-1.5 rounded-lg bg-slate-100 text-slate-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </span>
+                <h3 className="text-base font-bold text-slate-900">Portable Wage & Contract Snapshot</h3>
+              </div>
+              <span className="inline-flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200/80 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold">
+                <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+                <span className="">Encrypted Vault Copy</span>
               </span>
             </div>
-            <p className="font-body-md text-body-md text-on-surface-variant">Worker Safety & Portable Records · Riyadh, Saudi Arabia</p>
-            <div className="flex items-center gap-2 pt-1 text-on-surface-variant">
-              <span className="material-symbols-outlined text-[18px] text-surface-tint">schedule</span>
-              <span className="font-body-sm text-body-sm">Next scheduled check-in: <strong className="text-on-surface font-semibold">Sunday at 6:00 PM</strong></span>
-            </div>
-          </div>
-          
-          {/* Fast Action Buttons */}
-          <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-            <button 
-              id="btn-checkin"
-              onClick={handleCheckIn}
-              className={`flex-1 lg:flex-initial h-13 px-6 py-3.5 rounded-xl text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2.5 shadow-sm transition-all ${isCheckedIn ? 'bg-tertiary-container' : 'bg-primary hover:bg-primary-container'}`} 
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[20px] text-tertiary-fixed">check_circle</span>
-              <span id="checkin-label">{isCheckedIn ? "Safe Check-in Confirmed!" : "Check-in Now (I am safe)"}</span>
-            </button>
-            <button id="btn-sos" className="flex-1 lg:flex-initial h-13 px-5 py-3.5 rounded-xl bg-error-container text-on-error-container font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-error hover:text-on-error transition-all group" type="button">
-              <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">emergency_home</span>
-              <span>Hold for SOS</span>
-            </button>
-          </div>
-        </section>
 
-        {/* 2. KEY METRICS ROW */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_2px_8px_rgba(30,41,59,0.04)] flex flex-col justify-between gap-4">
-            <div className="flex items-center justify-between">
-              <span className="font-label-md text-label-md text-on-surface-variant">Wages Received</span>
-              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined text-[20px]">payments</span>
+            <div className="bg-slate-50/75 rounded-xl p-5 border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-slate-500">Household Employer</p>
+                <p className="text-sm font-bold text-slate-900">Al-Mansoor Family</p>
+                <p className="text-xs text-slate-600">Riyadh, Al-Malaz District</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-slate-500">Agreed Wage</p>
+                <p className="text-sm font-bold text-slate-900">1,500 SAR <span className="text-xs font-normal text-slate-500">/ Month</span></p>
+                <p className="text-xs text-emerald-600 font-medium">Auto-disbursed via digital ledger</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-slate-500">Weekly Rest Day</p>
+                <p className="text-sm font-bold text-slate-900">Every Friday</p>
+                <p className="text-xs text-slate-600">Guaranteed 24-hr rest window</p>
               </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="font-headline-md text-headline-md text-primary font-bold">$2,800</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">/ $3,200</span>
-              </div>
-              <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
-                <div className="bg-on-tertiary-container h-full rounded-full" style={{ width: '87.5%' }}></div>
-              </div>
-              <span className="font-body-sm text-body-sm text-on-tertiary-container font-medium pt-1">October salary logged (90% on time)</span>
-            </div>
-          </div>
-          
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_2px_8px_rgba(30,41,59,0.04)] flex flex-col justify-between gap-4">
-            <div className="flex items-center justify-between">
-              <span className="font-label-md text-label-md text-on-surface-variant">Contract Validity</span>
-              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined text-[20px]">assignment_turned_in</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="font-headline-md text-headline-md text-primary font-bold">16 Months</span>
-              <span className="font-body-sm text-body-sm text-on-surface-variant">Remaining on term</span>
-              <span className="font-body-sm text-body-sm text-on-tertiary-container font-medium pt-1">Bilateral agreement verified</span>
-            </div>
-          </div>
-          
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_2px_8px_rgba(30,41,59,0.04)] flex flex-col justify-between gap-4">
-            <div className="flex items-center justify-between">
-              <span className="font-label-md text-label-md text-on-surface-variant">Trust Registry</span>
-              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-tertiary-container">
-                <span className="material-symbols-outlined text-[20px]">verified</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <span className="font-headline-md text-headline-md text-primary font-bold">Agency Verified</span>
-              </div>
-              <span className="font-body-sm text-body-sm text-on-surface-variant">Ethio-Gulf Bilateral Agency</span>
-              <span className="font-body-sm text-body-sm text-on-surface font-semibold pt-1">Grade A Credential</span>
-            </div>
-          </div>
-          
-          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-[0_2px_8px_rgba(30,41,59,0.04)] flex flex-col justify-between gap-4">
-            <div className="flex items-center justify-between">
-              <span className="font-label-md text-label-md text-on-surface-variant">Safety Status</span>
-              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined text-[20px]">groups</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="font-headline-md text-headline-md text-primary font-bold">All 5 Active</span>
-              <span className="font-body-sm text-body-sm text-on-surface-variant">Trusted safety guardians</span>
-              <span className="font-body-sm text-body-sm text-on-tertiary-container font-medium pt-1">Consular hotline standby</span>
-            </div>
-          </div>
-        </section>
 
-        {/* 3. MAIN CONTENT GRID (Left 60%, Right 40%) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* LEFT COLUMN */}
-          <div className="lg:col-span-7 flex flex-col gap-8">
-            {/* SECTION A: Portable Wage & Contract Snapshot */}
-            <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col gap-6">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[20px]">contract</span>
-                  </div>
-                  <h2 className="font-headline-sm text-headline-sm text-primary">Portable Wage & Contract Snapshot</h2>
-                </div>
-                <span className="font-label-md text-label-md text-on-tertiary-container bg-surface-container-low px-3 py-1 rounded-full flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">lock</span> Encrypted Vault Copy
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5 rounded-xl bg-surface-container-low">
-                <div className="flex flex-col gap-1">
-                  <span className="font-label-md text-label-md text-on-surface-variant">Household Employer</span>
-                  <span className="font-label-lg text-label-lg text-on-surface">Al-Mansoor Family</span>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">Riyadh, Al-Malaz District</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="font-label-md text-label-md text-on-surface-variant">Agreed Wage</span>
-                  <span className="font-label-lg text-label-lg text-on-surface">1,500 SAR / Month</span>
-                  <span className="font-body-sm text-body-sm text-on-tertiary-container font-medium">Auto-disbursed via digital ledger</span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="font-label-md text-label-md text-on-surface-variant">Weekly Rest Day</span>
-                  <span className="font-label-lg text-label-lg text-on-surface">Every Friday</span>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">Guaranteed 24-hr rest window</span>
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-3">
-                <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Recent Disbursement Records</span>
-                
-                <div className="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-on-tertiary-container text-[24px]">verified</span>
-                    <div className="flex flex-col">
-                      <span className="font-label-lg text-label-lg text-on-surface">October 2024 Base Salary</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Direct mobile transfer · Deposited Oct 29</span>
+            <div className="space-y-3">
+              <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">Recent Disbursement Records</p>
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200/70 hover:border-slate-300 transition-colors shadow-sm">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">October 2024 Base Salary</h4>
+                      <p className="text-[11px] text-slate-500">Direct mobile transfer · Deposited Oct 29</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-label-lg text-label-lg text-on-surface font-bold">1,500 SAR</span>
-                    <p className="font-body-sm text-body-sm text-on-tertiary-container">Receipt Confirmed</p>
+                    <p className="text-xs font-bold text-slate-900 leading-tight">1,500 SAR</p>
+                    <p className="text-[11px] font-semibold text-emerald-600">Receipt Confirmed</p>
                   </div>
                 </div>
-                
-                <div className="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-on-tertiary-container text-[24px]">verified</span>
-                    <div className="flex flex-col">
-                      <span className="font-label-lg text-label-lg text-on-surface">September 2024 Base Salary</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Direct mobile transfer · Deposited Sep 30</span>
+                <div className="flex items-center justify-between p-3.5 bg-white rounded-xl border border-slate-200/70 hover:border-slate-300 transition-colors shadow-sm">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">September 2024 Base Salary</h4>
+                      <p className="text-[11px] text-slate-500">Direct mobile transfer · Deposited Sep 30</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-label-lg text-label-lg text-on-surface font-bold">1,500 SAR</span>
-                    <p className="font-body-sm text-body-sm text-on-tertiary-container">Receipt Confirmed</p>
+                    <p className="text-xs font-bold text-slate-900 leading-tight">1,500 SAR</p>
+                    <p className="text-[11px] font-semibold text-emerald-600">Receipt Confirmed</p>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button className="px-5 py-2.5 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center gap-2 hover:bg-primary transition-all" type="button">
-                  <span className="material-symbols-outlined text-[18px]">visibility</span>
-                  <span>View Full Contract</span>
-                </button>
-                <button className="px-5 py-2.5 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg flex items-center gap-2 hover:bg-surface-container-high transition-all" type="button">
-                  <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                  <span>Log New Payment</span>
-                </button>
-                <button className="px-4 py-2.5 rounded-lg text-on-surface-variant font-label-lg text-label-lg flex items-center gap-1.5 hover:text-on-surface transition-all ml-auto" type="button">
-                  <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-                  <span>Export Consular PDF</span>
-                </button>
               </div>
             </div>
 
-            {/* SECTION B: Voxide Voice Assistant */}
-            <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col gap-6">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">mic</span>
-                  </div>
-                  <div>
-                    <h2 className="font-headline-sm text-headline-sm text-primary">Voxide Voice Assistant</h2>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">Ask anything about your rights or contract terms</p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed/50 text-secondary font-label-md text-label-md">
-                  <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-                  Audio AI Ready
-                </span>
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
+              <div className="flex items-center space-x-3">
+                <button className="inline-flex items-center space-x-2 bg-[#17253b] hover:bg-[#1e293b] text-white px-4 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-sm">
+                  <svg className="w-4 h-4 text-white/90" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                  <span className="">View Full Contract</span>
+                </button>
+                <button className="inline-flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-all">
+                  <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                  <span className="">Log New Payment</span>
+                </button>
               </div>
-              
-              <div id="mic-zone" className="p-6 rounded-xl bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-6 cursor-pointer hover:bg-surface-container transition-all" onClick={toggleListening}>
-                <div className="flex items-center gap-4">
-                  <button 
-                    id="main-mic-btn"
-                    aria-label="Start Voice Recording" 
-                    className={`w-16 h-16 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center shadow-md transition-all ${isListening ? 'scale-110' : 'hover:scale-105 active:scale-95'}`}
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); toggleListening(); }}
-                  >
-                    <span className="material-symbols-outlined text-[32px]">mic</span>
-                  </button>
-                  <div className="flex flex-col">
-                    <span id="mic-status-title" className="font-headline-sm text-headline-sm text-primary">{micStatus}</span>
-                    <span className="font-body-sm text-body-sm text-on-surface-variant">English audio voice assistant is ready to listen</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-1.5 h-10 px-4 py-2 bg-surface-container-lowest rounded-lg">
-                  <span className="w-1 h-3 bg-secondary-container rounded-full animate-pulse"></span>
-                  <span className="w-1 h-6 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></span>
-                  <span className="w-1 h-8 bg-primary rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></span>
-                  <span className="w-1 h-4 bg-secondary-container rounded-full animate-pulse" style={{ animationDelay: '450ms' }}></span>
-                  <span className="w-1 h-7 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></span>
-                  <span className="w-1 h-2 bg-surface-tint rounded-full"></span>
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-2.5">
-                <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Quick One-Click Inquiries</span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <button onClick={handlePresetClick} className="voice-preset p-3 rounded-lg bg-surface-container-low hover:bg-surface-container text-left flex items-start gap-2.5 transition-all" type="button">
-                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">help_outline</span>
-                    <div className="flex flex-col">
-                      <span className="font-label-md text-label-md text-on-surface">Overtime Clause</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Review extra hours compensation</span>
-                    </div>
-                  </button>
-                  <button onClick={handlePresetClick} className="voice-preset p-3 rounded-lg bg-surface-container-low hover:bg-surface-container text-left flex items-start gap-2.5 transition-all" type="button">
-                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">gavel</span>
-                    <div className="flex flex-col">
-                      <span className="font-label-md text-label-md text-on-surface">Labor Law Rights</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Official domestic worker protections</span>
-                    </div>
-                  </button>
-                  <button onClick={handlePresetClick} className="voice-preset p-3 rounded-lg bg-surface-container-low hover:bg-surface-container text-left flex items-start gap-2.5 transition-all" type="button">
-                    <span className="material-symbols-outlined text-[18px] text-secondary mt-0.5">rate_review</span>
-                    <div className="flex flex-col">
-                      <span className="font-label-md text-label-md text-on-surface">Agency Rating</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Check broker compliance record</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
+              <button className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+                <span className="">Export Consular PDF</span>
+              </button>
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="lg:col-span-5 flex flex-col gap-8">
-            {/* SECTION C: Safety Check-in & Guardians */}
-            <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col gap-6">
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[20px]">shield</span>
-                  </div>
-                  <h2 className="font-headline-sm text-headline-sm text-primary">Guardians & Check-in</h2>
+                <div className="flex items-center space-x-2">
+                  <span className="p-1.5 rounded-lg bg-slate-100 text-slate-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                  </span>
+                  <h3 className="text-base font-bold text-slate-900">Guardians & Check-in</h3>
                 </div>
-                <span className="font-label-md text-label-md text-on-surface-variant">Weekly Cadence</span>
+                <span className="text-xs font-medium text-slate-500">Weekly Cadence</span>
               </div>
-              <div className="flex flex-col gap-3">
-                <div className="p-3.5 rounded-xl bg-surface-container-low flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-label-md text-primary font-bold">1</div>
-                    <div className="flex flex-col">
-                      <span className="font-label-lg text-label-lg text-on-surface">Family Emergency Link</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Mother & Brother (Addis Ababa)</span>
+
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center flex-shrink-0">1</div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">Family Emergency Link</h4>
+                      <p className="text-[11px] text-slate-500">Mother & Brother (Addis Ababa)</p>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-on-tertiary-container text-[20px]">check_circle</span>
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                  </div>
                 </div>
-                
-                <div className="p-3.5 rounded-xl bg-surface-container-low flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-label-md text-primary font-bold">2</div>
-                    <div className="flex flex-col">
-                      <span className="font-label-lg text-label-lg text-on-surface">Local Safe Cell Community</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Riyadh Domestic Workers Circle</span>
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center flex-shrink-0">2</div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">Local Safe Cell Community</h4>
+                      <p className="text-[11px] text-slate-500">Riyadh Domestic Workers Circle</p>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-on-tertiary-container text-[20px]">check_circle</span>
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                  </div>
                 </div>
-                
-                <div className="p-3.5 rounded-xl bg-surface-container-low flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center font-label-md text-primary font-bold">3</div>
-                    <div className="flex flex-col">
-                      <span className="font-label-lg text-label-lg text-on-surface">Ethiopian Embassy Consular Desk</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">+966 11 482 8411 (Diplomatic line)</span>
+                <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-7 h-7 rounded-lg bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center flex-shrink-0">3</div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">Ethiopian Embassy Consular Desk</h4>
+                      <p className="text-[11px] text-slate-500">+966 11 482 8411 (Diplomatic line)</p>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-on-tertiary-container text-[20px]">check_circle</span>
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg className="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                  </div>
                 </div>
               </div>
-              
-              <div className="p-4 rounded-xl bg-surface-container flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="material-symbols-outlined text-surface-tint text-[20px]">notifications_active</span>
-                  <span className="font-body-sm text-body-sm text-on-surface">Next automated ping alert in <strong className="text-primary font-semibold">3 days</strong></span>
+
+              <div className="flex items-center justify-between p-3 bg-slate-50/75 rounded-xl border border-slate-100 text-xs">
+                <div className="flex items-center space-x-2 text-slate-700">
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                  <span className="">Next automated ping alert in <strong className="font-semibold text-slate-900">3 days</strong></span>
                 </div>
-                <button className="font-label-md text-label-md text-primary hover:underline" type="button">Settings</button>
+                <button className="font-semibold text-slate-700 hover:text-slate-900 text-xs">Settings</button>
               </div>
             </div>
 
-            {/* SECTION D: Trust Registry Search */}
-            <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined text-[20px]">verified_user</span>
-                </div>
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+              <div className="flex items-start space-x-3">
+                <span className="p-2 rounded-xl bg-slate-100 text-slate-700 flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </span>
                 <div>
-                  <h2 className="font-headline-sm text-headline-sm text-primary">Trust Registry Search</h2>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Verify licensed recruiters and employers</p>
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight">Trust Registry Search</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Verify licensed recruiters and employers</p>
                 </div>
               </div>
-              
               <div className="relative flex items-center">
-                <input id="agency-search-input" className="w-full h-12 pl-11 pr-24 rounded-lg bg-surface-container-low text-on-surface font-body-sm placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container transition-all" placeholder="Search agency or employer license..." type="text" />
-                <span className="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[20px]">search</span>
-                <button id="btn-search-registry" className="absolute right-1.5 px-3 py-1.5 rounded-md bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-all" type="button">
+                <svg className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+                <input className="w-full pl-9 pr-24 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:border-slate-400" placeholder="Search agency or employer license..." type="text" />
+                <button className="absolute right-1.5 bg-[#0d1e32] hover:bg-[#142842] text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
                   Search
                 </button>
-              </div>
-              
-              <div className="p-4 rounded-xl bg-error-container/30 flex items-start gap-3">
-                <span className="material-symbols-outlined text-error text-[20px] mt-0.5">warning</span>
-                <div className="flex flex-col gap-1">
-                  <span className="font-label-md text-label-md text-on-surface font-semibold">Recent Council Verdict</span>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-                    <strong className="text-on-surface">Al-Barakah Agency</strong> placed on 3-month probation due to unverified salary fee deductions reported by 4 workers.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION E: Worker Governance Council */}
-            <div className="bg-surface-container-lowest rounded-xl p-6 lg:p-8 shadow-[0_2px_12px_rgba(30,41,59,0.04)] flex flex-col gap-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[20px]">account_balance</span>
-                  </div>
-                  <div>
-                    <h2 className="font-headline-sm text-headline-sm text-primary">Worker Governance Council</h2>
-                    <span className="font-body-sm text-body-sm text-on-surface-variant">Active Term 4 · Peer-Led Accountability</span>
-                  </div>
-                </div>
-                <span className="font-label-md text-label-md text-on-tertiary-container bg-surface-container-low px-2.5 py-1 rounded-full">12 Active Reps</span>
-              </div>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Have a dispute, unfair contract modification, or inquiry? Speak directly with a verified female community representative assigned to your sector.
-              </p>
-              <div className="flex items-center justify-between pt-1">
-                <button className="px-4 py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-all flex items-center gap-2" type="button">
-                  <span className="material-symbols-outlined text-[18px]">support_agent</span>
-                  <span>Contact Representative</span>
-                </button>
-                <a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface" href="#">View Decisions</a>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 4. BOTTOM DISCREET BAR */}
-        <footer className="mt-4 p-5 rounded-xl bg-surface-container flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-on-surface-variant">
-            <span className="material-symbols-outlined text-[20px]">keyboard</span>
-            <span className="font-body-sm text-body-sm">Press <kbd className="px-2 py-0.5 rounded bg-surface-container-lowest font-semibold text-on-surface text-label-md">ESC</kbd> anytime for immediate Quick Disguise</span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center text-amber-700 flex-shrink-0">
+                  <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">Voxide Voice Assistant</h3>
+                  <p className="text-xs text-slate-500">Ask anything about your rights or contract terms</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center space-x-1.5 bg-orange-50 border border-orange-200/80 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span className="">Audio AI Ready</span>
+              </span>
+            </div>
+
+            <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button className="w-12 h-12 rounded-full bg-[#f97316] hover:bg-[#ea580c] flex items-center justify-center text-white shadow-sm transition-transform active:scale-95 flex-shrink-0">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </button>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 leading-tight">Tap to Speak</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">English audio voice assistant is ready to listen</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-1 bg-white px-3 py-2.5 rounded-xl border border-slate-100 shadow-sm">
+                <span className="w-1 h-3 rounded-full bg-amber-500"></span>
+                <span className="w-1 h-6 rounded-full bg-amber-600"></span>
+                <span className="w-1 h-8 rounded-full bg-slate-800"></span>
+                <span className="w-1 h-5 rounded-full bg-amber-500"></span>
+                <span className="w-1 h-2 rounded-full bg-amber-400"></span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">Quick One-Click Inquiries</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button className="text-left p-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors space-y-1.5">
+                  <div className="flex items-center space-x-2 text-amber-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                    <span className="text-xs font-bold text-slate-900">Overtime Clause</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-normal">Review extra hours compensation</p>
+                </button>
+                <button className="text-left p-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors space-y-1.5">
+                  <div className="flex items-center space-x-2 text-amber-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                    <span className="text-xs font-bold text-slate-900">Labor Law Rights</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-normal">Official domestic worker protections</p>
+                </button>
+                <button className="text-left p-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-colors space-y-1.5">
+                  <div className="flex items-center space-x-2 text-amber-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                    <span className="text-xs font-bold text-slate-900">Agency Rating</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-normal">Check broker compliance record</p>
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-on-surface">
-            <span className="material-symbols-outlined text-error text-[20px]">phone_in_talk</span>
-            <span className="font-body-sm text-body-sm">24/7 Consular Emergency Assistance Hotline: <strong className="font-semibold">+966 11 482 8411</strong></span>
+
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-rose-50/70 border border-rose-200/80 rounded-2xl p-5 flex items-start space-x-3">
+              <div className="p-1 text-rose-500 flex-shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-slate-900">Recent Council Verdict</h4>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  <strong className="font-semibold text-slate-900">Al-Barakah Agency</strong> placed on 3-month probation due to unverified salary fee deductions reported by 4 workers.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <span className="p-1.5 rounded-lg bg-slate-100 text-slate-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" strokeLinecap="round" strokeLinejoin="round"></path>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 leading-tight">Worker Governance Council</h3>
+                    <p className="text-[11px] text-slate-500">Active Term 4 · Peer-Led Accountability</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
+                  12 Active Reps
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Have a dispute, unfair contract modification, or inquiry? Speak directly with a verified female community representative assigned to your sector.
+              </p>
+
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                <button className="inline-flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-all">
+                  <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                  <span className="">Contact Representative</span>
+                </button>
+                <button className="text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors">
+                  View Decisions
+                </button>
+              </div>
+            </div>
           </div>
-        </footer>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white/70 backdrop-blur rounded-2xl border border-slate-200/80 shadow-sm text-xs text-slate-600">
+          <div className="flex items-center space-x-2">
+            <span className="p-1 rounded bg-slate-100 text-slate-700">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                <path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </span>
+            <span className="">Press <kbd className="px-1.5 py-0.5 bg-slate-200 rounded text-[11px] font-bold text-slate-800">ESC</kbd> anytime for immediate Quick Disguise</span>
+          </div>
+          <div className="flex items-center space-x-2 text-slate-700">
+            <svg className="w-4 h-4 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" strokeLinecap="round" strokeLinejoin="round"></path>
+            </svg>
+            <span className="">24/7 Consular Emergency Assistance Hotline: <strong className="font-bold text-slate-900">+966 11 482 8411</strong></span>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
