@@ -1,12 +1,13 @@
 from typing import List
-from sqlmodel import Session, or_, select, func
+from sqlmodel import Session, select
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 
 from app.database import get_session
 from app.dependencies import get_current_worker
-from app.models import Agency, Report, Shortlist, Worker
+from app.models import Agency, Shortlist, Worker
 from app.schemas import AgencyCreate, AgencyRead, ShortlistCreate
+from app.services import registry
 
 router = APIRouter()
 
@@ -64,27 +65,7 @@ def search_agencies(
     offset: int = Query(0, ge=0),
     session: Session = Depends(get_session)
 ):
-    search_term = q.strip()
-    if not search_term:
-        return []
-
-    pattern = f"%{search_term}%"
-
-    statement = (
-        select(Agency)
-        .where(
-            or_(
-                Agency.name.ilike(pattern),
-                Agency.license_no.ilike(pattern),
-                Agency.phone.ilike(pattern),
-                Agency.location.ilike(pattern),
-            )
-        )
-        .offset(offset)
-        .limit(limit)
-    )
-
-    return session.exec(statement).all()
+    return registry.search_agencies(session, q, limit=limit, offset=offset)
 
 @router.get(
     "/agencies/{id}",
@@ -103,16 +84,7 @@ def get_agency_details(
         )
 
     # 2. Compute aggregated report counts per category (FR-2.4 Privacy)
-    report_counts = session.exec(
-        select(Report.category, func.count(Report.id))
-        .where(Report.agency_id == id)
-        .group_by(Report.category)
-    ).all()
-
-    report_flags = [
-        {"category": cat, "count": count}
-        for cat, count in report_counts
-    ]
+    report_flags = registry.get_report_flags(session, id)
 
     # 3. Return agency details with aggregated flags
     agency_data = agency.model_dump()

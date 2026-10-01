@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.models import Worker, Contract
+from app.models import Agency, Worker, Contract
 from app.dependencies import get_current_worker
 from app.integrations.voxide import call_voxide_stt, call_voxide_tts
 from app.schemas import (
@@ -13,6 +13,7 @@ from app.schemas import (
     VoiceReportRequest,
     VoiceReportResponse,
 )
+from app.services import registry
 
 router = APIRouter()
 
@@ -27,7 +28,8 @@ def _resolve_text(audio_url: str | None, text: str | None) -> str:
 @router.post("/query", response_model=VoiceQueryResponse)
 def voice_query(
     payload: VoiceQueryRequest,
-    worker: Worker = Depends(get_current_worker)
+    worker: Worker = Depends(get_current_worker),
+    session: Session = Depends(get_session)
 ):
     resolved_text = _resolve_text(payload.audio_url, payload.text)
     
@@ -35,8 +37,19 @@ def voice_query(
     registry_keywords = ["safe", "trust", "agency", "check"]
     
     if any(kw in text_lower for kw in registry_keywords):
-        # TODO: call registry search once available
-        answer_text = "This agency appears to be safe based on our preliminary records."
+        agency = None
+        if payload.agency_id:
+            agency = session.get(Agency, payload.agency_id)
+        if agency is None:
+            agency = registry.match_agency_by_name(session, resolved_text)
+
+        if agency is not None:
+            answer_text = registry.describe_agency_safety(session, agency)
+        else:
+            answer_text = (
+                "I could not tell which agency you mean. "
+                "Please say the agency's name or license number."
+            )
     else:
         answer_text = "I am Amannat voice assistant. How can I help you today?"
         
@@ -69,7 +82,8 @@ def voice_contract_read(
 @router.post("/report", response_model=VoiceReportResponse)
 def voice_report(
     payload: VoiceReportRequest,
-    worker: Worker = Depends(get_current_worker)
+    worker: Worker = Depends(get_current_worker),
+    session: Session = Depends(get_session)
 ):
     resolved_text = _resolve_text(payload.audio_url, payload.text)
     text_lower = resolved_text.lower()
@@ -84,16 +98,13 @@ def voice_report(
     elif any(kw in text_lower for kw in ["contract", "different", "changed"]):
         category_guess = "contract_substitution"
         
-    # extract agency name guess (stub)
-    agency_name_guess = None
-    known_agency_names = ["bad agency llc", "good agency"]
-    for name in known_agency_names:
-        if name in text_lower:
-            agency_name_guess = name
-            break
-            
+    agency = registry.match_agency_by_name(session, resolved_text)
+
+    # Deliberately returns a draft only: the worker must confirm it in the app before the
+    # frontend submits it to /report/reports. Do not auto-submit from here.
     return VoiceReportResponse(
         text=resolved_text,
         category_guess=category_guess,
-        agency_name_guess=agency_name_guess
+        agency_name_guess=agency.name if agency else None,
+        agency_id=agency.id if agency else None
     )

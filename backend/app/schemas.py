@@ -86,6 +86,8 @@ class VoiceQueryRequest(BaseModel):
     audio_url: Optional[str] = None
     text: Optional[str] = None
     language: str
+    # Agency the worker is currently viewing, so "is this agency safe?" has a referent
+    agency_id: Optional[str] = None
 
 class VoiceQueryResponse(BaseModel):
     answer_text: str
@@ -107,6 +109,7 @@ class VoiceReportResponse(BaseModel):
     text: str
     category_guess: str
     agency_name_guess: Optional[str] = None
+    agency_id: Optional[str] = None
 
 class CheckInScheduleRequest(BaseModel):
     frequency: str
