@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { translations } from '../../context/translations';
 
@@ -9,7 +9,76 @@ export default function AssistantPage() {
   const t = translations[language] || translations['English'];
 
   const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  
   const toggleListening = () => setIsListening(!isListening);
+
+  useEffect(() => {
+    let recognition;
+    
+    if (isListening) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        // Map app languages to BCP-47 tags
+        const langCodes = {
+          'English': 'en-US',
+          'Amharic': 'am-ET',
+          'Afaan Oromo': 'om-ET',
+          'Arabic': 'ar-SA'
+        };
+        recognition.lang = langCodes[language] || 'en-US';
+
+        recognition.onresult = (event) => {
+          let currentTranscript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setTranscript(currentTranscript);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error', event.error);
+          if (event.error === 'network') {
+            const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+            if (isFirefox) {
+              alert("Network Error: Firefox's built-in speech engine is currently unsupported due to missing backend services. Please open this app in Chrome or Edge to use voice features.");
+            } else {
+              alert("Network Error: Could not connect to the speech recognition service. Please check your internet connection.");
+            }
+          }
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        try {
+          recognition.start();
+        } catch(e) {
+          console.error('Failed to start speech recognition', e);
+        }
+      } else {
+        const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+        if (isFirefox) {
+          alert('Speech recognition in Firefox requires manual activation.\n\nPlease type "about:config" in your URL bar, search for "media.webspeech.recognition.enable" and set it to true.');
+        } else {
+          alert('Speech recognition is not supported in this browser. Please try Chrome or Edge.');
+        }
+        setIsListening(false);
+      }
+    }
+
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, [isListening, language]);
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] md:bg-[#fbf9f4] flex flex-col items-center font-sans text-[#1c2e28]">
@@ -208,7 +277,7 @@ export default function AssistantPage() {
                 <section className="bg-[#efebe2] rounded-2xl md:rounded-3xl p-3.5 md:p-6 text-neutral-800">
                   <span className="text-[10px] md:text-xs font-bold tracking-wider uppercase text-teal-900/60 block mb-1 md:mb-2">{t.youSaid}</span>
                   <p className="text-[13px] md:text-base font-medium leading-snug md:leading-relaxed text-neutral-800">
-                    {t.assistantQuery}
+                    {transcript || t.assistantQuery}
                   </p>
                 </section>
 
