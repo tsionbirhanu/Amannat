@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function HomePage() {
@@ -121,6 +122,57 @@ export default function HomePage() {
   };
 
   const t = translations[language] || translations['English'];
+
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [checkInTimeStr, setCheckInTimeStr] = useState('IN 2 HOURS');
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [checkInExpiry, setCheckInExpiry] = useState(null);
+
+  useEffect(() => {
+    // Check every second if the check-in has expired
+    const interval = setInterval(() => {
+      if (isCheckedIn && checkInExpiry && new Date() > checkInExpiry) {
+        setIsCheckedIn(false);
+        setCheckInExpiry(null);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isCheckedIn, checkInExpiry]);
+  
+  const handleCheckIn = () => {
+    setIsCheckedIn(true);
+    // Parse the checkInTimeStr roughly to set an expiry
+    let expiry = new Date();
+    if (checkInTimeStr.includes('2 HOURS')) {
+      expiry.setHours(expiry.getHours() + 2);
+    } else if (checkInTimeStr.includes('4 HOURS')) {
+      expiry.setHours(expiry.getHours() + 4);
+    } else if (checkInTimeStr.includes('8 HOURS')) {
+      expiry.setHours(expiry.getHours() + 8);
+    } else if (checkInTimeStr.includes('TOMORROW')) {
+      expiry.setDate(expiry.getDate() + 1);
+    } else if (selectedDate) {
+      expiry = new Date(selectedDate);
+    } else {
+      // Just for a quick test if users set random dates
+      expiry = new Date(selectedDate);
+    }
+    setCheckInExpiry(expiry);
+  };
+  
+  const handleChangeTime = () => {
+    setShowTimeModal(true);
+  };
+
+  const handleSaveTime = () => {
+    setShowTimeModal(false);
+    if (selectedDate) {
+      const d = new Date(selectedDate);
+      setCheckInTimeStr(d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F9F8F5] flex flex-col items-center font-sans">
       <main className="w-full h-[100dvh] md:h-screen bg-[#F9F8F5] flex flex-col overflow-hidden relative">
@@ -155,12 +207,12 @@ export default function HomePage() {
               <span>{t.safety}</span>
             </Link>
           </div>
-          <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors text-stone-700 text-sm font-medium" type="button">
+          <Link href="/register" className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors text-stone-700 text-sm font-medium">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"></path>
             </svg>
             <span>{t.exitDisguise}</span>
-          </button>
+          </Link>
         </nav>
 
         {/* Scrollable Content Layer */}
@@ -204,12 +256,12 @@ export default function HomePage() {
               </div>
               
               {/* Exit Action Button (Hidden on Desktop, moved to top nav) */}
-              <button className="md:hidden flex items-center space-x-1 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors text-stone-700 text-xs font-medium" type="button">
+              <Link href="/register" className="md:hidden flex items-center space-x-1 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors text-stone-700 text-xs font-medium">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"></path>
                 </svg>
                 <span>{t.exit}</span>
-              </button>
+              </Link>
             </section>
 
             <div className="md:flex md:gap-8 md:mt-8">
@@ -223,7 +275,9 @@ export default function HomePage() {
                       </svg>
                       <span>{t.nextCheckin}</span>
                     </div>
-                    <span className="text-[11px] md:text-[13px] font-bold tracking-wider text-amber-400">{t.in2Hours}</span>
+                    <span className="text-[11px] md:text-[13px] font-bold tracking-wider text-amber-400">
+                      {isCheckedIn ? "CHECKED IN" : checkInTimeStr === 'IN 2 HOURS' ? t.in2Hours : checkInTimeStr}
+                    </span>
                   </div>
                   
                   <h2 className="text-xl md:text-3xl font-semibold mt-4 md:mt-6 tracking-tight">{t.safeToday}</h2>
@@ -232,13 +286,13 @@ export default function HomePage() {
                   </p>
                   
                   <div className="mt-5 md:mt-8 pt-1 grid grid-cols-2 gap-2.5 md:gap-4">
-                    <button className="w-full bg-[#D9913D] hover:bg-[#C58032] transition-colors text-stone-900 font-semibold text-xs md:text-sm py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 shadow-sm active:scale-95" type="button">
-                      <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-900 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onClick={handleCheckIn} className={`w-full transition-colors font-semibold text-xs md:text-sm py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 ${isCheckedIn ? 'bg-emerald-600 text-white' : 'bg-[#D9913D] hover:bg-[#C58032] text-stone-900'}`} type="button">
+                      <svg className="w-4 h-4 md:w-5 md:h-5 text-current stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
                       </svg>
-                      <span>{t.imSafe}</span>
+                      <span>{isCheckedIn ? 'Safe Confirmed' : t.imSafe}</span>
                     </button>
-                    <button className="w-full bg-[#254F49] hover:bg-[#2F5D56] transition-colors text-white text-xs md:text-sm font-medium py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 active:scale-95" type="button">
+                    <button onClick={handleChangeTime} className="w-full bg-[#254F49] hover:bg-[#2F5D56] transition-colors text-white text-xs md:text-sm font-medium py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 active:scale-95" type="button">
                       <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-300" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
                       </svg>
@@ -336,22 +390,24 @@ export default function HomePage() {
 
                 {/* Portable Record Banner */}
                 <section className="mt-4 md:mt-6 px-5 md:px-0">
-                  <button className="w-full bg-white p-3.5 md:p-5 rounded-2xl md:rounded-3xl shadow-[0_2px_10px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] border border-stone-100 flex items-center justify-between text-left hover:border-stone-200 transition-all active:scale-[0.98]" type="button">
-                    <div className="flex items-center space-x-3.5 md:space-x-5">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-teal-50 flex items-center justify-center text-[#183B36]">
-                        <svg className="w-5 h-5 md:w-6 md:h-6 text-teal-800" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"></path>
-                        </svg>
+                  <Link href="/records" className="w-full block bg-white p-3.5 md:p-5 rounded-2xl md:rounded-3xl shadow-[0_2px_10px_rgba(0,0,0,0.04),0_1px_3px_rgba(0,0,0,0.02)] border border-stone-100 hover:border-stone-200 transition-all active:scale-[0.98]">
+                    <div className="flex items-center justify-between text-left">
+                      <div className="flex items-center space-x-3.5 md:space-x-5">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-teal-50 flex items-center justify-center text-[#183B36]">
+                          <svg className="w-5 h-5 md:w-6 md:h-6 text-teal-800" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"></path>
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-xs md:text-sm font-semibold text-gray-900">{t.portableRecord}</h4>
+                          <p className="text-[11px] md:text-xs text-stone-400 mt-0.5 md:mt-1">{t.savedDocs}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs md:text-sm font-semibold text-gray-900">{t.portableRecord}</h4>
-                        <p className="text-[11px] md:text-xs text-stone-400 mt-0.5 md:mt-1">{t.savedDocs}</p>
-                      </div>
+                      <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-400 mr-1 md:mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
+                      </svg>
                     </div>
-                    <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-400 mr-1 md:mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path>
-                    </svg>
-                  </button>
+                  </Link>
                 </section>
               </div>
             </div>
@@ -402,6 +458,38 @@ export default function HomePage() {
             <span className="text-[10px] font-medium mt-0.5">{t.safety}</span>
           </Link>
         </nav>
+        
+        {/* Time Settings Modal */}
+        {showTimeModal && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl flex flex-col space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">Set Check-in Time</h3>
+              <p className="text-sm text-stone-500">Choose when you want your next safety check-in to be due.</p>
+              
+              <input 
+                type="datetime-local" 
+                className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 outline-none focus:ring-2 focus:ring-teal-500"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+              
+              <div className="flex space-x-3 pt-2">
+                <button 
+                  onClick={() => setShowTimeModal(false)}
+                  className="flex-1 py-3 px-4 bg-stone-100 text-stone-700 font-medium rounded-xl hover:bg-stone-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveTime}
+                  className="flex-1 py-3 px-4 bg-[#183B36] text-white font-medium rounded-xl hover:bg-[#254F49] transition-colors"
+                >
+                  Save Time
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

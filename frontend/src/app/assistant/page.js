@@ -1,11 +1,15 @@
 'use client';
 import Link from 'next/link';
+import { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { translations } from '../../context/translations';
 
 export default function AssistantPage() {
   const { language } = useLanguage();
   const t = translations[language] || translations['English'];
+
+  const [isListening, setIsListening] = useState(false);
+  const toggleListening = () => setIsListening(!isListening);
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] md:bg-[#fbf9f4] flex flex-col items-center font-sans text-[#1c2e28]">
@@ -142,28 +146,38 @@ export default function AssistantPage() {
 
                 {/* Visualizer Card */}
                 <section className="bg-[#133e36] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
-                  <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-[#dca14c]/30 flex items-center justify-center p-1.5 md:p-2 mb-4 md:mb-6">
-                    <div className="w-full h-full rounded-full bg-[#dca14c] flex items-center justify-center shadow-inner">
-                      <svg className="w-6 h-6 md:w-10 md:h-10 text-[#133e36]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <button onClick={toggleListening} className={`w-16 h-16 md:w-24 md:h-24 rounded-full flex items-center justify-center p-1.5 md:p-2 mb-4 md:mb-6 transition-all outline-none ${isListening ? 'bg-[#dca14c]/30' : 'bg-white/10 hover:bg-white/20'}`}>
+                    <div className={`w-full h-full rounded-full flex items-center justify-center shadow-inner transition-colors ${isListening ? 'bg-[#dca14c] text-[#133e36]' : 'bg-[#1e584d] text-white'}`}>
+                      <svg className="w-6 h-6 md:w-10 md:h-10" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                         <line x1="12" x2="12" y1="19" y2="22"></line>
                       </svg>
                     </div>
-                  </div>
+                  </button>
                   <div aria-hidden="true" className="flex items-center justify-center gap-1.5 md:gap-2 h-9 md:h-12 mb-3 md:mb-5">
-                    <span className="w-1 md:w-1.5 h-2 md:h-3 rounded-full bg-[#377b6d] animate-pulse"></span>
-                    <span className="w-1 md:w-1.5 h-4 md:h-6 rounded-full bg-[#418f7f] animate-pulse" style={{ animationDelay: '100ms' }}></span>
-                    <span className="w-1 md:w-1.5 h-6 md:h-10 rounded-full bg-[#4ba391] animate-pulse" style={{ animationDelay: '200ms' }}></span>
-                    <span className="w-1 md:w-1.5 h-3 md:h-5 rounded-full bg-[#3f8879] animate-pulse" style={{ animationDelay: '150ms' }}></span>
-                    <span className="w-1.5 md:w-2 h-8 md:h-12 rounded-full bg-[#dca14c] animate-pulse" style={{ animationDelay: '300ms' }}></span>
-                    <span className="w-1 md:w-1.5 h-4 md:h-7 rounded-full bg-[#3f8879] animate-pulse" style={{ animationDelay: '100ms' }}></span>
-                    <span className="w-1 md:w-1.5 h-7 md:h-11 rounded-full bg-[#4ba391] animate-pulse" style={{ animationDelay: '250ms' }}></span>
-                    <span className="w-1 md:w-1.5 h-5 md:h-8 rounded-full bg-[#418f7f] animate-pulse" style={{ animationDelay: '50ms' }}></span>
-                    <span className="w-1 md:w-1.5 h-2.5 md:h-4 rounded-full bg-[#377b6d] animate-pulse"></span>
+                    {isListening ? (
+                      <>
+                        <span className="w-1 md:w-1.5 h-2 md:h-3 rounded-full bg-[#377b6d] animate-pulse"></span>
+                        <span className="w-1 md:w-1.5 h-4 md:h-6 rounded-full bg-[#418f7f] animate-pulse" style={{ animationDelay: '100ms' }}></span>
+                        <span className="w-1 md:w-1.5 h-6 md:h-10 rounded-full bg-[#4ba391] animate-pulse" style={{ animationDelay: '200ms' }}></span>
+                        <span className="w-1 md:w-1.5 h-3 md:h-5 rounded-full bg-[#3f8879] animate-pulse" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-1.5 md:w-2 h-8 md:h-12 rounded-full bg-[#dca14c] animate-pulse" style={{ animationDelay: '300ms' }}></span>
+                        <span className="w-1 md:w-1.5 h-4 md:h-7 rounded-full bg-[#3f8879] animate-pulse" style={{ animationDelay: '100ms' }}></span>
+                        <span className="w-1 md:w-1.5 h-7 md:h-11 rounded-full bg-[#4ba391] animate-pulse" style={{ animationDelay: '250ms' }}></span>
+                        <span className="w-1 md:w-1.5 h-5 md:h-8 rounded-full bg-[#418f7f] animate-pulse" style={{ animationDelay: '50ms' }}></span>
+                        <span className="w-1 md:w-1.5 h-2.5 md:h-4 rounded-full bg-[#377b6d] animate-pulse"></span>
+                      </>
+                    ) : (
+                      <span className="text-teal-100/50 text-xs md:text-sm h-full flex items-center">-</span>
+                    )}
                   </div>
-                  <h2 className="text-sm md:text-lg font-medium tracking-tight text-white mb-0.5 md:mb-1.5">{t.imListening}</h2>
-                  <p className="text-[11px] md:text-sm text-teal-100/70 font-normal">{t.speakNaturally}</p>
+                  <h2 className="text-sm md:text-lg font-medium tracking-tight text-white mb-0.5 md:mb-1.5">
+                    {isListening ? t.imListening : "Tap to speak"}
+                  </h2>
+                  <p className="text-[11px] md:text-sm text-teal-100/70 font-normal">
+                    {isListening ? t.speakNaturally : "Press the microphone to begin"}
+                  </p>
                 </section>
                 
                 {/* Action Buttons (Desktop moves these below visualizer) */}
