@@ -115,3 +115,13 @@ class CheckInScheduleRequest(BaseModel):
 class PanicRequest(BaseModel):
     lat: Optional[float] = None
     lng: Optional[float] = None
+
+class CouncilDecisionCreate(BaseModel):
+    case_id: str
+    ruling: str
+    published_summary: str
+
+class CouncilDecisionPublic(BaseModel):
+    case_id: str
+    published_summary: str
+    created_at: datetime
