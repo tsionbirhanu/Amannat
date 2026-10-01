@@ -81,3 +81,37 @@ class AppealCreate(BaseModel):
     message: str
 class ShortlistCreate(BaseModel):
     agency_id: str
+
+class VoiceQueryRequest(BaseModel):
+    audio_url: Optional[str] = None
+    text: Optional[str] = None
+    language: str
+
+class VoiceQueryResponse(BaseModel):
+    answer_text: str
+    answer_audio_url: str
+
+class VoiceContractRequest(BaseModel):
+    contract_id: str
+
+class VoiceContractResponse(BaseModel):
+    text: str
+    audio_url: str
+
+class VoiceReportRequest(BaseModel):
+    audio_url: Optional[str] = None
+    text: Optional[str] = None
+    language: str
+
+class VoiceReportResponse(BaseModel):
+    text: str
+    category_guess: str
+    agency_name_guess: Optional[str] = None
+
+class CheckInScheduleRequest(BaseModel):
+    frequency: str
+    channel: str
+
+class PanicRequest(BaseModel):
+    lat: Optional[float] = None
+    lng: Optional[float] = None
