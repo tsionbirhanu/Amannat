@@ -1,7 +1,126 @@
 'use client';
 import Link from 'next/link';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function HomePage() {
+  const { language } = useLanguage();
+
+  const translations = {
+    'English': {
+      home: 'Home',
+      trust: 'Trust',
+      records: 'Records',
+      safety: 'Safety',
+      goodMorning: 'Good morning, 8K2',
+      offlineSync: 'Offline • will sync later',
+      nextCheckin: 'Next check-in',
+      in2Hours: 'IN 2 HOURS',
+      safeToday: 'Are you safe today?',
+      guardianDesc: 'Your guardian only sees if you miss a check-in — not your location.',
+      imSafe: "I'm safe",
+      changeTime: 'Change time',
+      whatNeed: 'What do you need?',
+      listen: 'Listen',
+      checkAgency: 'Check an agency',
+      searchRegistry: 'Search the Trust Registry',
+      readContract: 'Read my contract',
+      cameraVoice: 'Use camera or voice',
+      recordPayment: 'Record a payment',
+      wageHistory: 'Keep a private wage history',
+      getHelp: 'Get help safely',
+      hotlines: 'Hotlines and incident report',
+      portableRecord: 'Your portable record',
+      savedDocs: '3 documents • Last saved today, 8:16',
+      exitDisguise: 'Exit Disguise',
+      exit: 'Exit'
+    },
+    'Amharic': {
+      home: 'መነሻ',
+      trust: 'እምነት',
+      records: 'መዝገቦች',
+      safety: 'ደህንነት',
+      goodMorning: 'እንደምን አደሩ, 8K2',
+      offlineSync: 'ከመስመር ውጭ • በኋላ ይመሳሰላል',
+      nextCheckin: 'ቀጣይ ማረጋገጫ',
+      in2Hours: 'በ2 ሰዓታት ውስጥ',
+      safeToday: 'ዛሬ ደህና ነዎት?',
+      guardianDesc: 'አሳዳጊዎ የሚያየው ማረጋገጫ ካጡ ብቻ ነው — አካባቢዎን አይደለም።',
+      imSafe: 'ደህና ነኝ',
+      changeTime: 'ሰዓት ቀይር',
+      whatNeed: 'ምን ይፈልጋሉ?',
+      listen: 'ያዳምጡ',
+      checkAgency: 'ኤጀንሲን ያረጋግጡ',
+      searchRegistry: 'የእምነት መዝገብን ይፈልጉ',
+      readContract: 'ውሌን አንብብ',
+      cameraVoice: 'ካሜራ ወይም ድምጽ ይጠቀሙ',
+      recordPayment: 'ክፍያን ይመዝግቡ',
+      wageHistory: 'የግል ደመወዝ ታሪክ ይያዙ',
+      getHelp: 'በደህና እርዳታ ያግኙ',
+      hotlines: 'የስልክ መስመሮች እና የክስተት ሪፖርት',
+      portableRecord: 'ተንቀሳቃሽ መዝገብዎ',
+      savedDocs: '3 ሰነዶች • ዛሬ 8፡16 ተቀምጧል',
+      exitDisguise: 'መደበቂያን ውጣ',
+      exit: 'ውጣ'
+    },
+    'Afaan Oromo': {
+      home: 'Gadaa',
+      trust: 'Amantaa',
+      records: 'Galmeewwan',
+      safety: 'Nageenya',
+      goodMorning: 'Akkam bultan, 8K2',
+      offlineSync: 'Tooraan ala • booda wajjiin sirreeffama',
+      nextCheckin: 'Mirkaneeffannaa itti aanu',
+      in2Hours: 'SA\'AATII 2 KEESSATTI',
+      safeToday: 'Har\'a nagaadhaa?',
+      guardianDesc: 'Guddisaan kee yoo mirkaneeffannaa dhabde qofa arga — iddoo kee miti.',
+      imSafe: 'Nagaadha',
+      changeTime: 'Yeroo jijjiiri',
+      whatNeed: 'Maal barbaadda?',
+      listen: 'Dhaggeeffadhu',
+      checkAgency: 'Ejensii mirkaneessi',
+      searchRegistry: 'Galmee Amantaa barbaadi',
+      readContract: 'Waliigaltee koo dubbisi',
+      cameraVoice: 'Kaameeraa ykn sagalee fayyadami',
+      recordPayment: 'Kaffaltii galmeessi',
+      wageHistory: 'Seenaa mindaa dhuunfaa qabadhu',
+      getHelp: 'Nageenyaan gargaarsa argadhu',
+      hotlines: 'Sararoota bilbilaa fi gabaasa taatee',
+      portableRecord: 'Galmee socho\'u kee',
+      savedDocs: 'Sanadoota 3 • Har\'a 8:16 qusatame',
+      exitDisguise: 'Dhoksaa keessaa bahi',
+      exit: 'Bahi'
+    },
+    'Arabic': {
+      home: 'الرئيسية',
+      trust: 'الثقة',
+      records: 'السجلات',
+      safety: 'السلامة',
+      goodMorning: 'صباح الخير، 8K2',
+      offlineSync: 'غير متصل • ستتم المزامنة لاحقاً',
+      nextCheckin: 'تسجيل الدخول التالي',
+      in2Hours: 'في ساعتين',
+      safeToday: 'هل أنت آمن اليوم؟',
+      guardianDesc: 'لا يرى الوصي إلا إذا فوت تسجيل الدخول — وليس موقعك.',
+      imSafe: 'أنا آمن',
+      changeTime: 'تغيير الوقت',
+      whatNeed: 'ماذا تحتاج؟',
+      listen: 'استمع',
+      checkAgency: 'تحقق من الوكالة',
+      searchRegistry: 'ابحث في سجل الثقة',
+      readContract: 'اقرأ عقدي',
+      cameraVoice: 'استخدم الكاميرا أو الصوت',
+      recordPayment: 'سجل الدفع',
+      wageHistory: 'احتفظ بسجل أجور خاص',
+      getHelp: 'احصل على المساعدة بأمان',
+      hotlines: 'الخطوط الساخنة وتقرير الحوادث',
+      portableRecord: 'سجلك المحمول',
+      savedDocs: '3 مستندات • تم الحفظ اليوم، 8:16',
+      exitDisguise: 'الخروج من التخفي',
+      exit: 'خروج'
+    }
+  };
+
+  const t = translations[language] || translations['English'];
   return (
     <div className="min-h-screen bg-[#F9F8F5] flex flex-col items-center font-sans">
       <main className="w-full h-[100dvh] md:h-screen bg-[#F9F8F5] flex flex-col overflow-hidden relative">
@@ -15,32 +134,32 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"></path>
                 </svg>
               </div>
-              <span>Home</span>
+              <span>{t.home}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/trust">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"></path>
               </svg>
-              <span>Trust</span>
+              <span>{t.trust}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/records">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"></path>
               </svg>
-              <span>Records</span>
+              <span>{t.records}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/safety">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"></path>
               </svg>
-              <span>Safety</span>
+              <span>{t.safety}</span>
             </Link>
           </div>
           <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors text-stone-700 text-sm font-medium" type="button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"></path>
             </svg>
-            <span>Exit Disguise</span>
+            <span>{t.exitDisguise}</span>
           </button>
         </nav>
 
@@ -76,10 +195,10 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-[17px] md:text-2xl font-semibold text-gray-900 leading-tight">Good morning, 8K2</h1>
+                  <h1 className="text-[17px] md:text-2xl font-semibold text-gray-900 leading-tight">{t.goodMorning}</h1>
                   <div className="flex items-center space-x-1.5 mt-0.5 md:mt-1.5">
                     <span className="w-2 h-2 rounded-full bg-amber-600 inline-block"></span>
-                    <span className="text-xs md:text-sm text-stone-500 font-normal">Offline • will sync later</span>
+                    <span className="text-xs md:text-sm text-stone-500 font-normal">{t.offlineSync}</span>
                   </div>
                 </div>
               </div>
@@ -89,7 +208,7 @@ export default function HomePage() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"></path>
                 </svg>
-                <span>Exit</span>
+                <span>{t.exit}</span>
               </button>
             </section>
 
@@ -102,14 +221,14 @@ export default function HomePage() {
                       <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-stone-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
-                      <span>Next check-in</span>
+                      <span>{t.nextCheckin}</span>
                     </div>
-                    <span className="text-[11px] md:text-[13px] font-bold tracking-wider text-amber-400">IN 2 HOURS</span>
+                    <span className="text-[11px] md:text-[13px] font-bold tracking-wider text-amber-400">{t.in2Hours}</span>
                   </div>
                   
-                  <h2 className="text-xl md:text-3xl font-semibold mt-4 md:mt-6 tracking-tight">Are you safe today?</h2>
+                  <h2 className="text-xl md:text-3xl font-semibold mt-4 md:mt-6 tracking-tight">{t.safeToday}</h2>
                   <p className="text-xs md:text-sm text-stone-300 mt-1 md:mt-3 leading-relaxed pr-2">
-                    Your guardian only sees if you miss a check-in — not your location.
+                    {t.guardianDesc}
                   </p>
                   
                   <div className="mt-5 md:mt-8 pt-1 grid grid-cols-2 gap-2.5 md:gap-4">
@@ -117,13 +236,13 @@ export default function HomePage() {
                       <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-900 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
                       </svg>
-                      <span>I'm safe</span>
+                      <span>{t.imSafe}</span>
                     </button>
                     <button className="w-full bg-[#254F49] hover:bg-[#2F5D56] transition-colors text-white text-xs md:text-sm font-medium py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 active:scale-95" type="button">
                       <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-300" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
                       </svg>
-                      <span>Change time</span>
+                      <span>{t.changeTime}</span>
                     </button>
                   </div>
                 </div>
@@ -133,9 +252,9 @@ export default function HomePage() {
                 {/* Action Grid Section */}
                 <section className="mt-5 md:mt-0 px-5 md:px-0">
                   <div className="flex items-center justify-between mb-3 md:mb-5">
-                    <h3 className="text-[15px] md:text-lg font-semibold text-gray-900">What do you need?</h3>
+                    <h3 className="text-[15px] md:text-lg font-semibold text-gray-900">{t.whatNeed}</h3>
                     <Link href="/assistant" className="text-xs md:text-sm font-medium text-[#183B36] hover:underline flex items-center space-x-1">
-                      <span>Listen</span>
+                      <span>{t.listen}</span>
                     </Link>
                   </div>
                   
@@ -154,8 +273,8 @@ export default function HomePage() {
                         </svg>
                       </div>
                       <div className="mt-3 md:mt-5">
-                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">Check an agency</span>
-                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">Search the Trust Registry</span>
+                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">{t.checkAgency}</span>
+                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">{t.searchRegistry}</span>
                       </div>
                     </Link>
                     
@@ -172,8 +291,8 @@ export default function HomePage() {
                         </svg>
                       </div>
                       <div className="mt-3 md:mt-5">
-                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">Read my contract</span>
-                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">Use camera or voice</span>
+                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">{t.readContract}</span>
+                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">{t.cameraVoice}</span>
                       </div>
                     </Link>
                     
@@ -190,8 +309,8 @@ export default function HomePage() {
                         </svg>
                       </div>
                       <div className="mt-3 md:mt-5">
-                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">Record a payment</span>
-                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">Keep a private wage history</span>
+                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">{t.recordPayment}</span>
+                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">{t.wageHistory}</span>
                       </div>
                     </Link>
                     
@@ -208,8 +327,8 @@ export default function HomePage() {
                         </svg>
                       </div>
                       <div className="mt-3 md:mt-5">
-                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">Get help safely</span>
-                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">Hotlines and incident report</span>
+                        <span className="block text-xs md:text-sm font-semibold text-gray-900 leading-tight">{t.getHelp}</span>
+                        <span className="block text-[10.5px] md:text-xs text-stone-400 mt-1 md:mt-1.5 font-normal">{t.hotlines}</span>
                       </div>
                     </Link>
                   </div>
@@ -225,8 +344,8 @@ export default function HomePage() {
                         </svg>
                       </div>
                       <div>
-                        <h4 className="text-xs md:text-sm font-semibold text-gray-900">Your portable record</h4>
-                        <p className="text-[11px] md:text-xs text-stone-400 mt-0.5 md:mt-1">3 documents • Last saved today, 8:16</p>
+                        <h4 className="text-xs md:text-sm font-semibold text-gray-900">{t.portableRecord}</h4>
+                        <p className="text-[11px] md:text-xs text-stone-400 mt-0.5 md:mt-1">{t.savedDocs}</p>
                       </div>
                     </div>
                     <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-400 mr-1 md:mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -256,7 +375,7 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"></path>
               </svg>
             </div>
-            <span className="text-[10px] font-semibold text-[#183B36] mt-0.5">Home</span>
+            <span className="text-[10px] font-semibold text-[#183B36] mt-0.5">{t.home}</span>
           </Link>
           <Link className="flex flex-col items-center text-stone-400 hover:text-stone-600 transition-colors" href="/trust">
             <div className="w-14 h-7 flex items-center justify-center">
@@ -264,7 +383,7 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"></path>
               </svg>
             </div>
-            <span className="text-[10px] font-medium mt-0.5">Trust</span>
+            <span className="text-[10px] font-medium mt-0.5">{t.trust}</span>
           </Link>
           <Link className="flex flex-col items-center text-stone-400 hover:text-stone-600 transition-colors" href="/records">
             <div className="w-14 h-7 flex items-center justify-center">
@@ -272,7 +391,7 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"></path>
               </svg>
             </div>
-            <span className="text-[10px] font-medium mt-0.5">Records</span>
+            <span className="text-[10px] font-medium mt-0.5">{t.records}</span>
           </Link>
           <Link className="flex flex-col items-center text-stone-400 hover:text-stone-600 transition-colors" href="/safety">
             <div className="w-14 h-7 flex items-center justify-center">
@@ -280,7 +399,7 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"></path>
               </svg>
             </div>
-            <span className="text-[10px] font-medium mt-0.5">Safety</span>
+            <span className="text-[10px] font-medium mt-0.5">{t.safety}</span>
           </Link>
         </nav>
       </main>

@@ -1,14 +1,53 @@
 'use client';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [selectedLang, setSelectedLang] = useState('English');
+  const { language: selectedLang, setLanguage: setSelectedLang } = useLanguage();
 
   const handleContinue = () => {
     // Navigate to the home dashboard after selection
     router.push('/home');
+  };
+
+  const translations = {
+    'English': {
+      worksOffline: 'Works offline',
+      exit: 'Exit',
+      tagline: 'Your contracts, wages, and safety support — carried with you.',
+      chooseLanguage: 'Choose your language',
+      languageDesc: 'You can listen to every step and change language at any time.',
+      privacyNotice: 'No name is needed to begin. Your private worker code is created on this device.',
+      continueIn: 'Continue in'
+    },
+    'Amharic': {
+      worksOffline: 'ያለ በይነመረብ ይሰራል',
+      exit: 'ውጣ',
+      tagline: 'ኮንትራቶችዎ፣ ደመወዝዎ እና የደህንነት ድጋፍዎ — ከእርስዎ ጋር ናቸው።',
+      chooseLanguage: 'ቋንቋዎን ይምረጡ',
+      languageDesc: 'እያንዳንዱን እርምጃ ማዳመጥ እና በማንኛውም ጊዜ ቋንቋ መቀየር ይችላሉ።',
+      privacyNotice: 'ለመጀመር ስም አያስፈልግም። የእርስዎ የግል ሰራተኛ ኮድ በዚህ መሳሪያ ላይ ይፈጠራል።',
+      continueIn: 'ቀጥል በ'
+    },
+    'Afaan Oromo': {
+      worksOffline: 'Toora irraan ala ni hojjeta',
+      exit: 'Bahi',
+      tagline: 'Waliigaltee kee, mindaa fi deeggarsi nageenyaa — si waliin jira.',
+      chooseLanguage: 'Afaan kee filadhu',
+      languageDesc: 'Tarkaanfii hunda dhaggeeffachuu fi yeroo barbaaddetti afaan jijjiiruu ni dandeessa.',
+      privacyNotice: 'Eegaluuf maqaan hin barbaachisu. Koodiin hojjetaa dhuunfaa keetii meeshaa kana irratti uumama.',
+      continueIn: 'Itti fufi'
+    },
+    'Arabic': {
+      worksOffline: 'يعمل بدون إنترنت',
+      exit: 'خروج',
+      tagline: 'عقودك وأجورك ودعم سلامتك — معك دائماً.',
+      chooseLanguage: 'اختر لغتك',
+      languageDesc: 'يمكنك الاستماع إلى كل خطوة وتغيير اللغة في أي وقت.',
+      privacyNotice: 'لا حاجة للاسم للبدء. يتم إنشاء رمز العامل الخاص بك على هذا الجهاز.',
+      continueIn: 'المتابعة بـ'
+    }
   };
 
   const languages = [
@@ -18,8 +57,11 @@ export default function RegisterPage() {
     { id: 'ar', name: 'Arabic', rtl: true },
   ];
 
+  const t = translations[selectedLang] || translations['English'];
+  const isRtl = languages.find(l => l.name === selectedLang)?.rtl || false;
+
   return (
-    <div className="h-screen flex items-center justify-center bg-[#fbfbf9] font-sans overflow-hidden">
+    <div className="h-screen flex items-center justify-center bg-[#fbfbf9] font-sans overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
       <main className="w-full h-full text-gray-900 relative flex flex-col md:flex-row overflow-hidden">
         
         {/* Left/Top Section Container (Green Background) */}
@@ -56,13 +98,13 @@ export default function RegisterPage() {
                 <path d="M5 5a10 10 0 0 1 14 0" strokeLinecap="round"></path>
                 <line strokeLinecap="round" strokeWidth="3" x1="12" x2="12.01" y1="20" y2="20"></line>
               </svg>
-              <span className="tracking-tight text-[11px] md:text-xs font-medium">Works offline</span>
+              <span className="tracking-tight text-[11px] md:text-xs font-medium">{t.worksOffline}</span>
             </div>
             <button aria-label="Exit" className="inline-flex items-center gap-1.5 bg-[#204a40]/90 hover:bg-[#27594d] text-white/90 px-3.5 py-1.5 rounded-full text-xs font-medium border border-emerald-600/30 active:scale-95 transition" type="button">
               <svg className="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" strokeLinecap="round" strokeLinejoin="round"></path>
               </svg>
-              <span className="text-[11px] md:text-xs">Exit</span>
+              <span className="text-[11px] md:text-xs">{t.exit}</span>
             </button>
           </div>
 
@@ -75,7 +117,7 @@ export default function RegisterPage() {
             </div>
             <h1 className="text-3xl md:text-6xl font-normal tracking-tight text-white mb-2 md:mb-4">Amannat</h1>
             <p className="text-[15px] md:text-xl md:leading-relaxed text-white/80 mt-2 font-light max-w-[310px] md:max-w-md">
-              Your contracts, wages, and safety support — carried with you.
+              {t.tagline}
             </p>
           </div>
         </div>
@@ -84,9 +126,9 @@ export default function RegisterPage() {
         <div className="px-5 md:px-12 lg:px-20 pt-5 md:pt-0 pb-3 md:pb-0 flex-1 flex flex-col justify-between md:justify-center md:items-center overflow-y-auto">
           <div className="w-full md:max-w-lg md:mx-auto flex flex-col justify-center my-auto py-4">
             <div className="mb-4 md:mb-6">
-              <h2 className="text-[20px] md:text-2xl font-semibold tracking-tight text-gray-900 md:mb-1">Choose your language</h2>
+              <h2 className="text-[20px] md:text-2xl font-semibold tracking-tight text-gray-900 md:mb-1">{t.chooseLanguage}</h2>
               <p className="text-[12.5px] md:text-sm leading-relaxed text-gray-500 mt-0.5">
-                You can listen to every step and change language at any time.
+                {t.languageDesc}
               </p>
             </div>
             
@@ -138,7 +180,7 @@ export default function RegisterPage() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <p className="text-[11.5px] md:text-[12.5px] leading-tight text-[#205244] font-normal">
-                  No name is needed to begin. Your private worker code is created on this device.
+                  {t.privacyNotice}
                 </p>
               </aside>
               
@@ -149,7 +191,7 @@ export default function RegisterPage() {
                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round"></path>
                 </svg>
-                <span>Continue in {selectedLang}</span>
+                <span>{t.continueIn} {selectedLang}</span>
               </button>
               
               {/* Home Bar Indicator (Hide on Desktop) */}

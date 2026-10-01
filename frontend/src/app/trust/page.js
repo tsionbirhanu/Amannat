@@ -1,66 +1,70 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '../../context/LanguageContext';
+import { translations } from '../../context/translations';
 
 export default function TrustRegistryPage() {
   const [activeAgency, setActiveAgency] = useState(null);
+  const { language } = useLanguage();
+  const t = translations[language] || translations['English'];
 
   const agencies = [
     {
       id: 1,
-      name: 'Al Noor Recruitment PLC',
-      location: 'Addis Ababa',
-      destination: 'Saudi Arabia',
+      name: t.agency1Name,
+      location: t.addisAbaba,
+      destination: t.saudiArabia,
       status: 'active', // active, warning
       icon: 'verified',
       color: 'emerald',
-      license: 'active',
-      flag: 'No repeated flags',
+      license: t.licenseActive,
+      flag: t.noRepeatedFlags,
       stats: {
         years: '4.2',
         records: '62',
-        concern: 'Low',
+        concern: t.concernLow,
         patterns: [
-          { type: 'positive', label: 'Salary matched signed contract', count: '58 of 62' }
+          { type: 'positive', label: t.salaryMatched, count: t.count58of62 }
         ]
       }
     },
     {
       id: 2,
-      name: 'Al Noor Overseas Services',
-      location: 'Adama',
-      destination: 'Gulf',
+      name: t.agency2Name,
+      location: t.adama,
+      destination: t.gulf,
       status: 'warning',
       icon: 'corporate_fare',
       color: 'amber',
-      license: 'Renewal pending',
-      flag: '3 salary mismatch patterns',
+      license: t.licenseRenewalPending,
+      flag: t.threeSalaryMismatch,
       stats: {
         years: '2.1',
         records: '14',
-        concern: 'High',
+        concern: t.concernHigh,
         patterns: [
-          { type: 'warning', label: 'Passport held longer than agreed', count: '2 reports' },
-          { type: 'warning', label: 'Unexpected placement fee', count: '1 report' }
+          { type: 'warning', label: t.passportHeldLonger, count: t.twoReports },
+          { type: 'warning', label: t.unexpectedPlacementFee, count: t.oneReport }
         ]
       }
     },
     {
       id: 3,
-      name: 'Noor Al Hayat Agency',
+      name: t.agency3Name,
       location: 'Addis Ababa',
-      destination: 'Qatar',
+      destination: t.qatar,
       status: 'active',
       icon: 'verified',
       color: 'emerald',
       license: 'active',
-      flag: '1 delayed document pattern',
+      flag: t.oneDelayedDocument,
       stats: {
         years: '1.8',
         records: '25',
-        concern: 'Medium',
+        concern: t.concernMedium,
         patterns: [
-          { type: 'warning', label: 'Delayed document return', count: '1 report' }
+          { type: 'warning', label: t.delayedDocumentReturn, count: '1 report' }
         ]
       }
     }
@@ -75,26 +79,26 @@ export default function TrustRegistryPage() {
           <div className="flex items-center space-x-6">
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/home">
               <span className="material-symbols-outlined text-[20px]">home</span>
-              <span>Home</span>
+              <span>{t.home}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-brand-900 font-semibold" href="/trust">
               <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px] filled text-brand-800">verified</span>
               </div>
-              <span>Trust</span>
+              <span>{t.trust}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/records">
               <span className="material-symbols-outlined text-[20px]">folder</span>
-              <span>Records</span>
+              <span>{t.records}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/safety">
               <span className="material-symbols-outlined text-[20px]">shield</span>
-              <span>Safety</span>
+              <span>{t.safety}</span>
             </Link>
           </div>
           <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-sand-100 hover:bg-sand-200 border border-sand-300 transition-colors text-stone-700 text-sm font-semibold" type="button">
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Exit Disguise</span>
+            <span>{t.exitDisguise}</span>
           </button>
         </nav>
 
@@ -121,23 +125,23 @@ export default function TrustRegistryPage() {
                     <span className="material-symbols-outlined text-[22px]">verified_user</span>
                   </div>
                   <div>
-                    <h2 className="text-lg md:text-xl font-bold text-stone-900 leading-tight">Trust Registry</h2>
+                    <h2 className="text-lg md:text-xl font-bold text-stone-900 leading-tight">{t.trustRegistry}</h2>
                     <p className="text-[11px] md:text-xs text-stone-500 font-medium flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 inline-block"></span>
-                      Offline • will sync later
+                      {t.offlineSync}
                     </p>
                   </div>
                 </div>
                 <Link href="/home" className="md:hidden flex items-center gap-1 text-xs font-semibold text-stone-700 bg-sand-100 hover:bg-sand-200 px-3 py-1.5 rounded-xl border border-sand-300 transition-colors">
                   <span className="material-symbols-outlined text-[16px]">logout</span>
-                  <span>Exit</span>
+                  <span>{t.exit}</span>
                 </Link>
               </header>
 
               <div className="relative mb-3 md:mb-4">
                 <div className="flex items-center bg-white rounded-2xl px-3.5 py-3 border border-stone-300/80 shadow-sm focus-within:ring-2 focus-within:ring-brand-700 focus-within:border-brand-700">
                   <span className="material-symbols-outlined text-stone-400 text-[20px] mr-2.5">search</span>
-                  <input className="w-full bg-transparent border-0 p-0 text-stone-900 placeholder-stone-400 font-medium text-sm focus:ring-0 outline-none" placeholder="Search agency name..." type="text" defaultValue="Al Noor"/>
+                  <input className="w-full bg-transparent border-0 p-0 text-stone-900 placeholder-stone-400 font-medium text-sm focus:ring-0 outline-none" placeholder={t.searchAgency} type="text" defaultValue="Al Noor"/>
                   <button aria-label="Voice search" className="ml-2 w-8 h-8 rounded-full bg-sand-100 text-stone-600 flex items-center justify-center hover:bg-sand-200 transition-colors" type="button">
                     <span className="material-symbols-outlined text-[18px]">mic</span>
                   </button>
@@ -145,17 +149,17 @@ export default function TrustRegistryPage() {
               </div>
 
               <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-xs md:text-sm text-stone-600 font-medium">3 agencies found</span>
+                <span className="text-xs md:text-sm text-stone-600 font-medium">{t.agenciesFound}</span>
                 <button className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-700 bg-sand-100 px-3 py-1 rounded-full border border-sand-300 hover:bg-sand-200 transition">
                   <span className="material-symbols-outlined text-[15px] text-stone-500">location_on</span>
-                  <span>Saudi Arabia</span>
+                  <span>{t.saudiArabia}</span>
                 </button>
               </div>
 
               <div className="bg-brand-50 border border-brand-200/80 rounded-2xl p-3 mb-3.5 flex items-start gap-2.5 text-stone-700 text-xs md:text-[13px]">
                 <span className="material-symbols-outlined text-brand-700 text-[18px] shrink-0 mt-0.5">verified</span>
                 <p className="leading-relaxed">
-                  License status comes from public government records. Worker patterns are anonymous.
+                  {t.licenseStatus}
                 </p>
               </div>
 
@@ -178,7 +182,7 @@ export default function TrustRegistryPage() {
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-stone-900">{agency.name}</h3>
-                          <p className="text-[11px] text-stone-500 mt-0.5">{agency.location} • {agency.destination} placements</p>
+                          <p className="text-[11px] text-stone-500 mt-0.5">{agency.location} • {agency.destination} {t.placements}</p>
                         </div>
                       </div>
                       <span className="material-symbols-outlined text-stone-400 text-[18px] mt-1 hidden md:block">
@@ -209,7 +213,7 @@ export default function TrustRegistryPage() {
               <div className="mt-4 bg-brand-50 border border-brand-200/70 rounded-2xl p-3 flex items-start gap-2.5 text-stone-600 text-xs">
                 <span className="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">lock</span>
                 <p className="leading-relaxed">
-                  Searches are not linked to your worker code. No agency can see that you looked them up.
+                  {t.searchesPrivate}
                 </p>
               </div>
             </div>
@@ -222,8 +226,8 @@ export default function TrustRegistryPage() {
               // Desktop Empty State
               <div className="hidden md:flex flex-col items-center justify-center h-full text-stone-400 p-8 text-center">
                 <span className="material-symbols-outlined text-6xl mb-4 text-stone-300">verified_user</span>
-                <h3 className="text-xl font-bold text-stone-700 mb-2">Select an agency</h3>
-                <p className="text-stone-500 max-w-sm">Tap on an agency from the search results to view their official license status and anonymous worker patterns.</p>
+                <h3 className="text-xl font-bold text-stone-700 mb-2">{t.selectAgency}</h3>
+                <p className="text-stone-500 max-w-sm">{t.tapAgency}</p>
               </div>
             ) : (
               // Actual Detail View
@@ -234,16 +238,16 @@ export default function TrustRegistryPage() {
                       <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </button>
                     <div className="ml-1 md:ml-0">
-                      <h2 className="text-base md:text-2xl font-bold text-stone-900 leading-tight">Agency details</h2>
+                      <h2 className="text-base md:text-2xl font-bold text-stone-900 leading-tight">{t.agencyDetails}</h2>
                       <p className="text-[11px] md:text-sm text-stone-500 font-medium flex items-center gap-1 md:mt-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
-                        Saved on this device
+                        {t.savedOnDevice}
                       </p>
                     </div>
                   </div>
                   <button className="md:hidden flex items-center gap-1 text-xs font-semibold text-stone-700 bg-sand-100 hover:bg-sand-200 px-3 py-1.5 rounded-xl border border-sand-300 transition-colors">
                     <span className="material-symbols-outlined text-[16px]">logout</span>
-                    <span>Exit</span>
+                    <span>{t.exit}</span>
                   </button>
                 </header>
 
@@ -256,7 +260,7 @@ export default function TrustRegistryPage() {
                     </div>
                     <div className="mt-0.5">
                       <h3 className="text-base md:text-xl font-bold text-stone-900 leading-snug">{activeAgency.name}</h3>
-                      <p className="text-xs md:text-sm text-stone-500 mt-0.5 md:mt-1">{activeAgency.location} • {activeAgency.destination} placements</p>
+                      <p className="text-xs md:text-sm text-stone-500 mt-0.5 md:mt-1">{activeAgency.location} • {activeAgency.destination} {t.placements}</p>
                     </div>
                   </div>
                   
@@ -269,9 +273,9 @@ export default function TrustRegistryPage() {
                       `}>{activeAgency.status === 'warning' ? 'schedule' : 'account_balance'}</span>
                       <div>
                         <h4 className={`text-xs md:text-sm font-bold ${activeAgency.status === 'warning' ? 'text-amber-950' : 'text-emerald-950'}`}>
-                          {activeAgency.status === 'warning' ? 'License renewal pending' : 'Government license active'}
+                          {activeAgency.status === 'warning' ? t.govLicenseRenewalPending : t.govLicenseActive}
                         </h4>
-                        <p className="text-[11px] md:text-xs text-stone-600 mt-0.5">MOLS Registration ET-RA-20481 • checked 24 Sep 2026</p>
+                        <p className="text-[11px] md:text-xs text-stone-600 mt-0.5">{t.molsRegistration}</p>
                       </div>
                     </div>
                     {activeAgency.status !== 'warning' && (
@@ -285,22 +289,22 @@ export default function TrustRegistryPage() {
                 <div className="grid grid-cols-3 gap-2.5 md:gap-4 mb-4 md:mb-6">
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
                     <div className="text-base md:text-xl font-bold text-stone-900">{activeAgency.stats.years} yrs</div>
-                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">in registry</div>
+                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">{t.inRegistry}</div>
                   </div>
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
                     <div className="text-base md:text-xl font-bold text-stone-900">{activeAgency.stats.records}</div>
-                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">anonymous records</div>
+                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">{t.anonymousRecordsLabel}</div>
                   </div>
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
                     <div className={`text-base md:text-xl font-bold ${activeAgency.stats.concern === 'High' ? 'text-red-700' : activeAgency.stats.concern === 'Medium' ? 'text-amber-700' : 'text-emerald-800'}`}>{activeAgency.stats.concern}</div>
-                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">pattern concern</div>
+                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">{t.patternConcern}</div>
                   </div>
                 </div>
 
                 <div className="bg-white md:bg-sand-50/50 rounded-2xl p-4 md:p-6 border border-stone-200/90 shadow-sm mb-3 md:mb-5">
                   <div className="flex items-center justify-between mb-3 md:mb-4">
-                    <h4 className="text-sm md:text-base font-bold text-stone-900">Anonymous worker patterns</h4>
-                    <a className="text-xs md:text-sm font-semibold text-brand-700 underline decoration-brand-200 hover:text-brand-900" href="#">How this works</a>
+                    <h4 className="text-sm md:text-base font-bold text-stone-900">{t.anonymousWorkerPatterns}</h4>
+                    <a className="text-xs md:text-sm font-semibold text-brand-700 underline decoration-brand-200 hover:text-brand-900" href="#">{t.howThisWorks}</a>
                   </div>
                   <div className="space-y-2.5 md:space-y-3">
                     {activeAgency.stats.patterns.map((pattern, idx) => (
@@ -328,18 +332,18 @@ export default function TrustRegistryPage() {
                 <div className="bg-brand-50 border border-brand-200/70 rounded-2xl p-3 md:p-4 flex items-start gap-2.5 md:gap-3 text-stone-600 text-xs md:text-sm mb-4 md:mb-6">
                   <span className="material-symbols-outlined text-emerald-700 text-[18px] md:text-[22px] shrink-0 mt-0.5">verified_user</span>
                   <p className="leading-relaxed">
-                    Patterns only appear after enough similar records. No worker, employer, or exact incident is identified.
+                    {t.patternsOnlyAppear}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-5 gap-2.5 md:gap-4 mb-2">
                   <button className="col-span-2 flex items-center justify-center gap-1.5 py-3 md:py-4 px-2 bg-white hover:bg-sand-100 text-stone-800 text-xs md:text-sm font-bold rounded-2xl border border-stone-300 shadow-sm transition active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[20px]">bookmark</span>
-                    <span>Save agency</span>
+                    <span>{t.saveAgency}</span>
                   </button>
                   <button className="col-span-3 flex items-center justify-center gap-1.5 py-3 md:py-4 px-3 bg-brand-800 hover:bg-brand-900 text-white text-xs md:text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[20px]">document_scanner</span>
-                    <span>Check a contract</span>
+                    <span>{t.checkAContract}</span>
                   </button>
                 </div>
               </div>
@@ -351,19 +355,19 @@ export default function TrustRegistryPage() {
         <nav className="md:hidden absolute bottom-0 inset-x-0 bg-sand-50/95 backdrop-blur-md border-t border-sand-200 px-6 py-2.5 flex justify-between items-center z-20">
           <Link className="flex flex-col items-center gap-0.5 text-stone-500 hover:text-stone-800 transition" href="/home">
             <span className="material-symbols-outlined text-[22px]">home</span>
-            <span className="text-[10px] font-medium">Home</span>
+            <span className="text-[10px] font-medium">{t.home}</span>
           </Link>
           <button className="flex flex-col items-center gap-0.5 px-3 py-1 bg-brand-100 text-brand-900 rounded-xl transition">
             <span className="material-symbols-outlined text-[22px] filled text-brand-800">verified</span>
-            <span className="text-[10px] font-bold text-brand-900">Trust</span>
+            <span className="text-[10px] font-bold text-brand-900">{t.trust}</span>
           </button>
           <Link className="flex flex-col items-center gap-0.5 text-stone-500 hover:text-stone-800 transition" href="/records">
             <span className="material-symbols-outlined text-[22px]">folder</span>
-            <span className="text-[10px] font-medium">Records</span>
+            <span className="text-[10px] font-medium">{t.records}</span>
           </Link>
           <Link className="flex flex-col items-center gap-0.5 text-stone-500 hover:text-stone-800 transition" href="/safety">
             <span className="material-symbols-outlined text-[22px]">shield</span>
-            <span className="text-[10px] font-medium">Safety</span>
+            <span className="text-[10px] font-medium">{t.safety}</span>
           </Link>
         </nav>
       </main>
