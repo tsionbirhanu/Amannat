@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { auth, workers, voice, getLanguage } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
+import { translations } from '../../context/translations';
 
 const SPEECH_LANG = { en: 'en-US', am: 'am-ET', om: 'om-ET', ar: 'ar-SA' };
 
@@ -38,6 +40,8 @@ const fetchRecord = async () => {
 };
 
 export default function ReviewRecordPage() {
+  const { language } = useLanguage();
+  const t = translations[language] || translations['English'];
   const ready = useRequireAuth();
   const [activeView, setActiveView] = useState('contract'); // 'contract', 'record', or 'both'
   const [record, setRecord] = useState(null); // { me, contracts, latest, summary }
@@ -175,26 +179,26 @@ export default function ReviewRecordPage() {
           <div className="flex items-center space-x-6">
             <Link className="flex items-center space-x-2 text-slate-500 hover:text-slate-800 transition-colors font-medium" href="/home">
               <span className="material-symbols-outlined text-[20px]">home</span>
-              <span>Home</span>
+              <span>{t.home}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-slate-500 hover:text-slate-800 transition-colors font-medium" href="/trust">
               <span className="material-symbols-outlined text-[20px]">verified</span>
-              <span>Trust</span>
+              <span>{t.trust}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-emerald-800 font-semibold" href="/records">
               <div className="w-8 h-8 rounded-full bg-[#edf6f2] flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px] filled text-emerald-800">folder</span>
               </div>
-              <span>Records</span>
+              <span>{t.records}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-slate-500 hover:text-slate-800 transition-colors font-medium" href="/safety">
               <span className="material-symbols-outlined text-[20px]">shield</span>
-              <span>Safety</span>
+              <span>{t.safety}</span>
             </Link>
           </div>
           <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-700 text-sm font-semibold" type="button">
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Exit Disguise</span>
+            <span>{t.exitDisguise}</span>
           </button>
         </nav>
 
@@ -205,13 +209,13 @@ export default function ReviewRecordPage() {
               className={`flex-1 py-1.5 rounded-full transition-all ${activeView === 'contract' ? 'bg-teal-600 text-white font-semibold' : 'text-slate-300 hover:text-white'}`}
               onClick={() => setActiveView('contract')}
             >
-              1. Review
+              {t.tabReview}
             </button>
             <button 
               className={`flex-1 py-1.5 rounded-full transition-all ${activeView === 'record' ? 'bg-teal-600 text-white font-semibold' : 'text-slate-300 hover:text-white'}`}
               onClick={() => setActiveView('record')}
             >
-              2. Record
+              {t.tabRecord}
             </button>
           </div>
         </div>
@@ -243,16 +247,16 @@ export default function ReviewRecordPage() {
                     <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   </Link>
                   <div>
-                    <h1 className="text-[17px] md:text-xl font-bold tracking-tight text-slate-900 leading-tight">Review contract terms</h1>
+                    <h1 className="text-[17px] md:text-xl font-bold tracking-tight text-slate-900 leading-tight">{t.reviewContractTerms}</h1>
                     <div className="flex items-center gap-1.5 text-[11px] md:text-xs text-slate-500 font-medium mt-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                      <span>Offline • will sync later</span>
+                      <span>{t.offlineSync}</span>
                     </div>
                   </div>
                 </div>
                 <button className="md:hidden px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-700 flex items-center gap-1 shadow-sm hover:bg-slate-50">
                   <span className="material-symbols-outlined text-[14px]">logout</span>
-                  <span>Exit</span>
+                  <span>{t.exit}</span>
                 </button>
               </header>
 
@@ -290,7 +294,7 @@ export default function ReviewRecordPage() {
                     <span className="material-symbols-outlined text-[20px] md:text-[24px]">play_arrow</span>
                   </button>
                   <div>
-                    <h2 className="text-[13px] md:text-sm font-semibold tracking-wide">Listen to the contract summary</h2>
+                    <h2 className="text-[13px] md:text-sm font-semibold tracking-wide">{t.listenSummary}</h2>
                     <p className="text-[11px] md:text-xs text-teal-200/90 mt-0.5">Read aloud by Voxide</p>
                   </div>
                 </div>
@@ -310,7 +314,7 @@ export default function ReviewRecordPage() {
                       <span>{issue.title}</span>
                     </div>
                     <span className={`text-[11px] md:text-xs font-medium px-2 py-0.5 rounded-md ${issue.tone === 'warn' ? 'text-amber-800 bg-amber-100/90' : 'text-[#991b1b] bg-rose-100/90'}`}>
-                      {issue.tone === 'warn' ? 'Unusual' : 'Missing'}
+                      {issue.tone === 'warn' ? t.unusual : t.missing}
                     </span>
                   </div>
                   <p className="text-slate-700 leading-snug">{issue.body}</p>
@@ -326,7 +330,7 @@ export default function ReviewRecordPage() {
               <section className="bg-white rounded-2xl md:rounded-3xl p-2 md:p-3 border border-slate-200/80 shadow-sm divide-y divide-slate-100">
                 {[
                   ['Monthly wage', contract.wage > 0 ? money(contract.wage) : null],
-                  ['Working hours', terms.hours ? `${terms.hours} hours per day` : null],
+                  [t.workingHours, terms.hours ? `${terms.hours} hours per day` : null],
                   ['Start date', fmtDate(contract.start_date)],
                   ['End date', contract.end_date ? fmtDate(contract.end_date) : 'Ongoing'],
                 ].map(([label, value]) => (
@@ -350,7 +354,7 @@ export default function ReviewRecordPage() {
               <section className="bg-[#edf6f2] border border-[#d8ebe1] rounded-2xl p-3 md:p-4 flex items-start gap-2.5 md:gap-3">
                 <span className="material-symbols-outlined text-[16px] md:text-[20px] text-emerald-700 shrink-0 mt-0.5 md:mt-0">lock</span>
                 <p className="text-[11px] md:text-xs leading-relaxed text-slate-700">
-                  This review is guidance, not legal advice. Your original pages remain unchanged and worker-owned.
+                  {t.reviewGuidance}
                 </p>
               </section>
 
@@ -364,7 +368,7 @@ export default function ReviewRecordPage() {
                   onClick={() => setActiveView(window.innerWidth >= 768 ? 'both' : 'record')}
                 >
                   <span className="material-symbols-outlined text-[18px] text-emerald-300">check_box</span>
-                  <span>Save review</span>
+                  <span>{t.saveReview}</span>
                 </button>
               </div>
             </main>
@@ -382,16 +386,16 @@ export default function ReviewRecordPage() {
                     <span className="material-symbols-outlined text-[20px] md:text-[24px] text-teal-300">verified</span>
                   </div>
                   <div>
-                    <h1 className="text-[17px] md:text-xl font-bold tracking-tight text-slate-900 leading-tight">My portable record</h1>
+                    <h1 className="text-[17px] md:text-xl font-bold tracking-tight text-slate-900 leading-tight">{t.myPortableRecord}</h1>
                     <div className="flex items-center gap-1.5 text-[11px] md:text-xs text-slate-500 font-medium mt-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      <span>Saved on this device</span>
+                      <span>{t.savedOnDevice}</span>
                     </div>
                   </div>
                 </div>
                 <button className="md:hidden px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[12px] font-medium text-slate-700 flex items-center gap-1 shadow-sm hover:bg-slate-50">
                   <span className="material-symbols-outlined text-[14px]">logout</span>
-                  <span>Exit</span>
+                  <span>{t.exit}</span>
                 </button>
               </header>
 
@@ -415,7 +419,7 @@ export default function ReviewRecordPage() {
 
               <section className="bg-white rounded-2xl md:rounded-3xl p-3.5 md:p-5 border border-slate-200/90 shadow-sm space-y-3 md:space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-bold text-slate-900 text-[14px] md:text-base">Wage history</h2>
+                  <h2 className="font-bold text-slate-900 text-[14px] md:text-base">{t.wageHistoryLabel}</h2>
                   {contract && (
                     <button type="button" onClick={() => setShowPayment((v) => !v)} className="text-[12px] md:text-sm font-semibold text-teal-700 hover:text-teal-800">
                       {showPayment ? 'Cancel' : 'Add payment'}
@@ -446,7 +450,7 @@ export default function ReviewRecordPage() {
                         <div className="text-[15px] md:text-xl font-bold text-emerald-800 mt-0.5 md:mt-1">{money(summary.total_paid)}</div>
                       </div>
                       <div className="bg-[#fef4e8] rounded-xl md:rounded-2xl p-2.5 md:p-4">
-                        <span className="text-[11px] md:text-xs text-amber-800 font-medium">Still owed</span>
+                        <span className="text-[11px] md:text-xs text-amber-800 font-medium">{t.stillOwed}</span>
                         <div className="text-[15px] md:text-xl font-bold text-amber-700 mt-0.5 md:mt-1">{money(Math.max(0, summary.balance))}</div>
                       </div>
                     </div>
@@ -462,7 +466,7 @@ export default function ReviewRecordPage() {
 
               <section className="space-y-2 md:space-y-3 pt-1 md:pt-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-bold text-slate-900 text-[14px] md:text-base">Saved evidence</h2>
+                  <h2 className="font-bold text-slate-900 text-[14px] md:text-base">{t.savedEvidence}</h2>
                   <Link href="/records" className="text-[12px] md:text-sm font-medium text-slate-500 hover:text-slate-800">Add pages</Link>
                 </div>
 
@@ -499,14 +503,14 @@ export default function ReviewRecordPage() {
                   </div>
                   <div className="flex items-center gap-1 text-[11px] md:text-xs font-medium text-slate-600 bg-slate-100 px-2 md:px-3 py-1 rounded-lg">
                     <span className="material-symbols-outlined text-[14px]">lock</span>
-                    <span>Private</span>
+                    <span>{t.private}</span>
                   </div>
                 </div>
 
                 <div className="bg-[#edf6f2] border border-[#d8ebe1] rounded-2xl p-3 md:p-4 flex items-start gap-2.5 md:gap-3">
                   <span className="material-symbols-outlined text-[16px] md:text-[20px] text-emerald-700 shrink-0 mt-0.5 md:mt-0">lock</span>
                   <p className="text-[11px] md:text-xs leading-relaxed text-slate-700">
-                    PDF export uses your worker code, not your name. Choose what to include before sharing.
+                    {t.pdfExportNotice}
                   </p>
                 </div>
               </section>
@@ -514,7 +518,7 @@ export default function ReviewRecordPage() {
               <div className="grid grid-cols-2 gap-2.5 md:gap-4 pt-1 pb-4 md:pt-3">
                 <button type="button" onClick={openPaymentForm} className="w-full py-2.5 md:py-3.5 rounded-xl md:rounded-2xl border border-slate-300 bg-white font-semibold text-[13px] md:text-sm text-slate-700 flex items-center justify-center gap-1.5 hover:bg-slate-50 active:scale-[0.98] transition-all">
                   <span className="material-symbols-outlined text-[18px]">add</span>
-                  <span>Add payment</span>
+                  <span>{t.addPayment}</span>
                 </button>
                 <button type="button" onClick={exportRecord} className="w-full py-2.5 md:py-3.5 rounded-xl md:rounded-2xl bg-[#1b433c] hover:bg-[#153630] text-white font-semibold text-[13px] md:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition-all">
                   <span className="material-symbols-outlined text-[18px] text-emerald-300">download</span>

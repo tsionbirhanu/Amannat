@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { agency as agencyApi, isLoggedIn } from '@/lib/api';
+import { useLanguage } from '../../context/LanguageContext';
+import { translations } from '../../context/translations';
 
 const CATEGORY_LABELS = {
   wage_nonpayment: 'Wages not paid',
@@ -48,6 +50,8 @@ function toView(a, flags = null) {
 }
 
 export default function TrustRegistryPage() {
+  const { language } = useLanguage();
+  const t = translations[language] || translations['English'];
   const [activeAgency, setActiveAgency] = useState(null);
   const [query, setQuery] = useState('');
   const [agencies, setAgencies] = useState([]);
@@ -115,26 +119,26 @@ export default function TrustRegistryPage() {
           <div className="flex items-center space-x-6">
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/home">
               <span className="material-symbols-outlined text-[20px]">home</span>
-              <span>Home</span>
+              <span>{t.home}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-brand-900 font-semibold" href="/trust">
               <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px] filled text-brand-800">verified</span>
               </div>
-              <span>Trust</span>
+              <span>{t.trust}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/records">
               <span className="material-symbols-outlined text-[20px]">folder</span>
-              <span>Records</span>
+              <span>{t.records}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-stone-500 hover:text-stone-800 transition-colors font-medium" href="/safety">
               <span className="material-symbols-outlined text-[20px]">shield</span>
-              <span>Safety</span>
+              <span>{t.safety}</span>
             </Link>
           </div>
           <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-sand-100 hover:bg-sand-200 border border-sand-300 transition-colors text-stone-700 text-sm font-semibold" type="button">
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Exit Disguise</span>
+            <span>{t.exitDisguise}</span>
           </button>
         </nav>
 
@@ -161,23 +165,23 @@ export default function TrustRegistryPage() {
                     <span className="material-symbols-outlined text-[22px]">verified_user</span>
                   </div>
                   <div>
-                    <h2 className="text-lg md:text-xl font-bold text-stone-900 leading-tight">Trust Registry</h2>
+                    <h2 className="text-lg md:text-xl font-bold text-stone-900 leading-tight">{t.trustRegistry}</h2>
                     <p className="text-[11px] md:text-xs text-stone-500 font-medium flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 inline-block"></span>
-                      Offline • will sync later
+                      {t.offlineSync}
                     </p>
                   </div>
                 </div>
                 <Link href="/home" className="md:hidden flex items-center gap-1 text-xs font-semibold text-stone-700 bg-sand-100 hover:bg-sand-200 px-3 py-1.5 rounded-xl border border-sand-300 transition-colors">
                   <span className="material-symbols-outlined text-[16px]">logout</span>
-                  <span>Exit</span>
+                  <span>{t.exit}</span>
                 </Link>
               </header>
 
               <div className="relative mb-3 md:mb-4">
                 <div className="flex items-center bg-white rounded-2xl px-3.5 py-3 border border-stone-300/80 shadow-sm focus-within:ring-2 focus-within:ring-brand-700 focus-within:border-brand-700">
                   <span className="material-symbols-outlined text-stone-400 text-[20px] mr-2.5">search</span>
-                  <input className="w-full bg-transparent border-0 p-0 text-stone-900 placeholder-stone-400 font-medium text-sm focus:ring-0 outline-none" placeholder="Search agency name, license or phone..." type="text" value={query} onChange={(e) => handleQueryChange(e.target.value)}/>
+                  <input className="w-full bg-transparent border-0 p-0 text-stone-900 placeholder-stone-400 font-medium text-sm focus:ring-0 outline-none" placeholder={t.searchAgency} type="text" value={query} onChange={(e) => handleQueryChange(e.target.value)}/>
                   <button aria-label="Voice search" className="ml-2 w-8 h-8 rounded-full bg-sand-100 text-stone-600 flex items-center justify-center hover:bg-sand-200 transition-colors" type="button">
                     <span className="material-symbols-outlined text-[18px]">mic</span>
                   </button>
@@ -197,7 +201,7 @@ export default function TrustRegistryPage() {
               <div className="bg-brand-50 border border-brand-200/80 rounded-2xl p-3 mb-3.5 flex items-start gap-2.5 text-stone-700 text-xs md:text-[13px]">
                 <span className="material-symbols-outlined text-brand-700 text-[18px] shrink-0 mt-0.5">verified</span>
                 <p className="leading-relaxed">
-                  License status comes from public government records. Worker patterns are anonymous.
+                  {t.licenseStatus}
                 </p>
               </div>
 
@@ -251,7 +255,7 @@ export default function TrustRegistryPage() {
               <div className="mt-4 bg-brand-50 border border-brand-200/70 rounded-2xl p-3 flex items-start gap-2.5 text-stone-600 text-xs">
                 <span className="material-symbols-outlined text-emerald-700 text-[18px] shrink-0 mt-0.5">lock</span>
                 <p className="leading-relaxed">
-                  Searches are not linked to your worker code. No agency can see that you looked them up.
+                  {t.searchesPrivate}
                 </p>
               </div>
             </div>
@@ -264,8 +268,8 @@ export default function TrustRegistryPage() {
               // Desktop Empty State
               <div className="hidden md:flex flex-col items-center justify-center h-full text-stone-400 p-8 text-center">
                 <span className="material-symbols-outlined text-6xl mb-4 text-stone-300">verified_user</span>
-                <h3 className="text-xl font-bold text-stone-700 mb-2">Select an agency</h3>
-                <p className="text-stone-500 max-w-sm">Tap on an agency from the search results to view their official license status and anonymous worker patterns.</p>
+                <h3 className="text-xl font-bold text-stone-700 mb-2">{t.selectAgency}</h3>
+                <p className="text-stone-500 max-w-sm">{t.tapAgency}</p>
               </div>
             ) : (
               // Actual Detail View
@@ -276,16 +280,16 @@ export default function TrustRegistryPage() {
                       <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     </button>
                     <div className="ml-1 md:ml-0">
-                      <h2 className="text-base md:text-2xl font-bold text-stone-900 leading-tight">Agency details</h2>
+                      <h2 className="text-base md:text-2xl font-bold text-stone-900 leading-tight">{t.agencyDetails}</h2>
                       <p className="text-[11px] md:text-sm text-stone-500 font-medium flex items-center gap-1 md:mt-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
-                        Saved on this device
+                        {t.savedOnDevice}
                       </p>
                     </div>
                   </div>
                   <button className="md:hidden flex items-center gap-1 text-xs font-semibold text-stone-700 bg-sand-100 hover:bg-sand-200 px-3 py-1.5 rounded-xl border border-sand-300 transition-colors">
                     <span className="material-symbols-outlined text-[16px]">logout</span>
-                    <span>Exit</span>
+                    <span>{t.exit}</span>
                   </button>
                 </header>
 
@@ -337,18 +341,18 @@ export default function TrustRegistryPage() {
                   </div>
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
                     <div className="text-base md:text-xl font-bold text-stone-900">{activeAgency.stats.records}</div>
-                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">anonymous records</div>
+                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">{t.anonymousRecordsLabel}</div>
                   </div>
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
-                    <div className={`text-base md:text-xl font-bold ${activeAgency.stats.concern === 'High' ? 'text-red-700' : activeAgency.stats.concern === 'Medium' ? 'text-amber-700' : 'text-emerald-800'}`}>{activeAgency.stats.concern}</div>
-                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">pattern concern</div>
+                    <div className={`text-base md:text-xl font-bold ${activeAgency.stats.concern === 'High' ? 'text-red-700' : activeAgency.stats.concern === 'Medium' ? 'text-amber-700' : 'text-emerald-800'}`}>{{ High: t.concernHigh, Medium: t.concernMedium, Low: t.concernLow }[activeAgency.stats.concern] || activeAgency.stats.concern}</div>
+                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">{t.patternConcern}</div>
                   </div>
                 </div>
 
                 <div className="bg-white md:bg-sand-50/50 rounded-2xl p-4 md:p-6 border border-stone-200/90 shadow-sm mb-3 md:mb-5">
                   <div className="flex items-center justify-between mb-3 md:mb-4">
-                    <h4 className="text-sm md:text-base font-bold text-stone-900">Anonymous worker patterns</h4>
-                    <a className="text-xs md:text-sm font-semibold text-brand-700 underline decoration-brand-200 hover:text-brand-900" href="#">How this works</a>
+                    <h4 className="text-sm md:text-base font-bold text-stone-900">{t.anonymousWorkerPatterns}</h4>
+                    <a className="text-xs md:text-sm font-semibold text-brand-700 underline decoration-brand-200 hover:text-brand-900" href="#">{t.howThisWorks}</a>
                   </div>
                   <div className="space-y-2.5 md:space-y-3">
                     {activeAgency.stats.records === 0 && (
@@ -379,7 +383,7 @@ export default function TrustRegistryPage() {
                 <div className="bg-brand-50 border border-brand-200/70 rounded-2xl p-3 md:p-4 flex items-start gap-2.5 md:gap-3 text-stone-600 text-xs md:text-sm mb-4 md:mb-6">
                   <span className="material-symbols-outlined text-emerald-700 text-[18px] md:text-[22px] shrink-0 mt-0.5">verified_user</span>
                   <p className="leading-relaxed">
-                    Patterns only appear after enough similar records. No worker, employer, or exact incident is identified.
+                    {t.patternsOnlyAppear}
                   </p>
                 </div>
 
@@ -390,11 +394,11 @@ export default function TrustRegistryPage() {
                 <div className="grid grid-cols-5 gap-2.5 md:gap-4 mb-2">
                   <button onClick={saveAgency} className="col-span-2 flex items-center justify-center gap-1.5 py-3 md:py-4 px-2 bg-white hover:bg-sand-100 text-stone-800 text-xs md:text-sm font-bold rounded-2xl border border-stone-300 shadow-sm transition active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[20px]">bookmark</span>
-                    <span>Save agency</span>
+                    <span>{t.saveAgency}</span>
                   </button>
                   <Link href="/records" className="col-span-3 flex items-center justify-center gap-1.5 py-3 md:py-4 px-3 bg-brand-800 hover:bg-brand-900 text-white text-xs md:text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[20px]">document_scanner</span>
-                    <span>Check a contract</span>
+                    <span>{t.checkAContract}</span>
                   </Link>
                 </div>
               </div>
@@ -406,19 +410,19 @@ export default function TrustRegistryPage() {
         <nav className="md:hidden absolute bottom-0 inset-x-0 bg-sand-50/95 backdrop-blur-md border-t border-sand-200 px-6 py-2.5 flex justify-between items-center z-20">
           <Link className="flex flex-col items-center gap-0.5 text-stone-500 hover:text-stone-800 transition" href="/home">
             <span className="material-symbols-outlined text-[22px]">home</span>
-            <span className="text-[10px] font-medium">Home</span>
+            <span className="text-[10px] font-medium">{t.home}</span>
           </Link>
           <button className="flex flex-col items-center gap-0.5 px-3 py-1 bg-brand-100 text-brand-900 rounded-xl transition">
             <span className="material-symbols-outlined text-[22px] filled text-brand-800">verified</span>
-            <span className="text-[10px] font-bold text-brand-900">Trust</span>
+            <span className="text-[10px] font-bold text-brand-900">{t.trust}</span>
           </button>
           <Link className="flex flex-col items-center gap-0.5 text-stone-500 hover:text-stone-800 transition" href="/records">
             <span className="material-symbols-outlined text-[22px]">folder</span>
-            <span className="text-[10px] font-medium">Records</span>
+            <span className="text-[10px] font-medium">{t.records}</span>
           </Link>
           <Link className="flex flex-col items-center gap-0.5 text-stone-500 hover:text-stone-800 transition" href="/safety">
             <span className="material-symbols-outlined text-[22px]">shield</span>
-            <span className="text-[10px] font-medium">Safety</span>
+            <span className="text-[10px] font-medium">{t.safety}</span>
           </Link>
         </nav>
       </main>

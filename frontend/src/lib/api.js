@@ -19,8 +19,16 @@ export const setToken = (t) => storage()?.setItem(TOKEN_KEY, t);
 export const clearToken = () => storage()?.removeItem(TOKEN_KEY);
 export const isLoggedIn = () => !!getToken();
 
-export const getLanguage = () => storage()?.getItem(LANG_KEY) || 'en';
-export const setLanguage = (code) => storage()?.setItem(LANG_KEY, code);
+// LanguageContext (src/context/LanguageContext.js) owns `amannat_lang` and stores the
+// language *name* ("Amharic"). The API/voice code needs an ISO code ("am").
+const LANG_CODES = { English: 'en', Amharic: 'am', 'Afaan Oromo': 'om', Arabic: 'ar' };
+export const getLanguage = () => {
+  const stored = storage()?.getItem(LANG_KEY);
+  if (!stored) return 'en';
+  if (LANG_CODES[stored]) return LANG_CODES[stored];
+  // Older sessions stored the code itself
+  return Object.values(LANG_CODES).includes(stored) ? stored : 'en';
+};
 
 export class ApiError extends Error {
   constructor(message, status) {

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { workers, agency as agencyApi } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useAuth';
+import { useLanguage } from '../../context/LanguageContext';
+import { translations } from '../../context/translations';
 
 const FLAG_LABELS = {
   missing_wage: 'No wage amount',
@@ -12,6 +14,8 @@ const FLAG_LABELS = {
 };
 
 export default function RecordsPage() {
+  const { language } = useLanguage();
+  const t = translations[language] || translations['English'];
   const router = useRouter();
   const ready = useRequireAuth();
   const [selectedOption, setSelectedOption] = useState('camera');
@@ -129,26 +133,26 @@ export default function RecordsPage() {
           <div className="flex items-center space-x-6">
             <Link className="flex items-center space-x-2 text-slate-500 hover:text-slate-800 transition-colors font-medium" href="/home">
               <span className="material-symbols-outlined text-[20px]">home</span>
-              <span>Home</span>
+              <span>{t.home}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-slate-500 hover:text-slate-800 transition-colors font-medium" href="/trust">
               <span className="material-symbols-outlined text-[20px]">verified</span>
-              <span>Trust</span>
+              <span>{t.trust}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-[#163E38] font-semibold" href="/records">
               <div className="w-8 h-8 rounded-full bg-[#EBF3EE] flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px] filled text-[#163E38]">folder</span>
               </div>
-              <span>Records</span>
+              <span>{t.recordsTitle}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-slate-500 hover:text-slate-800 transition-colors font-medium" href="/safety">
               <span className="material-symbols-outlined text-[20px]">shield</span>
-              <span>Safety</span>
+              <span>{t.safety}</span>
             </Link>
           </div>
           <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#FAF2F2] hover:bg-rose-50 border border-[#F3DFDF] transition-colors text-slate-700 text-sm font-semibold" type="button">
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Exit Disguise</span>
+            <span>{t.exitDisguise}</span>
           </button>
         </nav>
 
@@ -179,16 +183,16 @@ export default function RecordsPage() {
                   <span className="material-symbols-outlined text-[20px] md:text-[24px] text-slate-700">arrow_back</span>
                 </Link>
                 <div className="flex flex-col">
-                  <h1 className="text-base md:text-2xl font-semibold text-slate-900 leading-tight">Add your contract</h1>
+                  <h1 className="text-base md:text-2xl font-semibold text-slate-900 leading-tight">{t.addYourContract}</h1>
                   <div className="flex items-center space-x-1.5 mt-0.5 md:mt-1.5">
                     <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#C26D28]"></span>
-                    <span className="text-[11px] md:text-sm text-slate-500 font-medium">Offline • will sync later</span>
+                    <span className="text-[11px] md:text-sm text-slate-500 font-medium">{t.offlineSync}</span>
                   </div>
                 </div>
               </div>
               <Link href="/home" className="md:hidden px-3.5 py-1.5 bg-[#FAF2F2] hover:bg-rose-50 text-slate-700 text-xs font-medium rounded-full flex items-center space-x-1.5 border border-[#F3DFDF] transition active:scale-95">
                 <span className="material-symbols-outlined text-[16px]">logout</span>
-                <span>Exit</span>
+                <span>{t.exit}</span>
               </Link>
             </section>
 
@@ -198,9 +202,9 @@ export default function RecordsPage() {
               {/* Left Column (Desktop) / Top Section (Mobile) */}
               <div className="md:w-1/2 flex flex-col">
                 <section className="mb-4 md:mb-6">
-                  <h2 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">Let’s save what was promised</h2>
+                  <h2 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">{t.savePromised}</h2>
                   <p className="text-xs md:text-base text-slate-600 mt-1 md:mt-2 leading-relaxed max-w-md">
-                    Use your camera, upload pages, or tell Voxide the terms. You can review everything before saving.
+                    {t.savePromisedDesc}
                   </p>
                 </section>
 
@@ -219,8 +223,8 @@ export default function RecordsPage() {
                         <span className="material-symbols-outlined text-[20px] md:text-[28px]">camera_alt</span>
                       </div>
                       <div>
-                        <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">Take photos</h3>
-                        <p className="text-[11px] md:text-sm text-slate-600 mt-0.5 md:mt-1 leading-snug">Capture every page. We&apos;ll check if one is missing.</p>
+                        <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">{t.takePhotos}</h3>
+                        <p className="text-[11px] md:text-sm text-slate-600 mt-0.5 md:mt-1 leading-snug">{t.takePhotosDesc}</p>
                       </div>
                     </div>
                     {selectedOption === 'camera' ? (
@@ -248,8 +252,8 @@ export default function RecordsPage() {
                         <span className="material-symbols-outlined text-[20px] md:text-[28px]">mic</span>
                       </div>
                       <div>
-                        <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">Tell Voxide the terms</h3>
-                        <p className="text-[11px] md:text-sm text-slate-500 mt-0.5 md:mt-1 leading-snug">Speak salary, hours, rest days, and destination.</p>
+                        <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">{t.tellVoxide}</h3>
+                        <p className="text-[11px] md:text-sm text-slate-500 mt-0.5 md:mt-1 leading-snug">{t.tellVoxideDesc}</p>
                       </div>
                     </div>
                     {selectedOption === 'voice' ? (
@@ -277,8 +281,8 @@ export default function RecordsPage() {
                         <span className="material-symbols-outlined text-[20px] md:text-[28px]">upload_file</span>
                       </div>
                       <div>
-                        <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">Choose a PDF or photo</h3>
-                        <p className="text-[11px] md:text-sm text-slate-500 mt-0.5 md:mt-1 leading-snug">Import a file already saved on this device.</p>
+                        <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">{t.choosePdf}</h3>
+                        <p className="text-[11px] md:text-sm text-slate-500 mt-0.5 md:mt-1 leading-snug">{t.choosePdfDesc}</p>
                       </div>
                     </div>
                     {selectedOption === 'upload' ? (
@@ -298,7 +302,7 @@ export default function RecordsPage() {
                     <span className="material-symbols-outlined text-[16px] md:text-[20px]">lock</span>
                   </div>
                   <p className="text-[10.5px] md:text-[13px] leading-tight md:leading-snug text-slate-600 font-normal">
-                    Pages are encrypted on this device. Upload waits for a safe connection, and you choose whether to sync.
+                    {t.pagesEncrypted}
                   </p>
                 </section>
               </div>
@@ -352,7 +356,7 @@ export default function RecordsPage() {
                       </button>
                     </div>
                     <p className={`text-[11px] md:text-sm mt-3 ${selectedOption === 'camera' ? 'text-emerald-200/90' : 'text-slate-500'}`}>
-                      {selectedOption === 'camera' ? 'Keep all four corners in the frame, in good light.' : 'Photos or PDF, up to 10 MB each.'}
+                      {selectedOption === 'camera' ? `${t.keepCorners} • ${t.goodLight}` : 'Photos or PDF, up to 10 MB each.'}
                     </p>
                   </section>
                 )}
@@ -418,21 +422,21 @@ export default function RecordsPage() {
         <nav className="md:hidden absolute bottom-0 inset-x-0 w-full bg-white border-t border-slate-200/80 px-6 py-2 pb-5 flex justify-between items-center z-30 select-none">
           <Link className="flex flex-col items-center text-slate-500 hover:text-slate-800 transition" href="/home">
             <span className="material-symbols-outlined text-[24px]">home</span>
-            <span className="text-[10px] mt-1 font-medium">Home</span>
+            <span className="text-[10px] mt-1 font-medium">{t.home}</span>
           </Link>
           <Link className="flex flex-col items-center text-slate-500 hover:text-slate-800 transition" href="/trust">
             <span className="material-symbols-outlined text-[24px]">verified</span>
-            <span className="text-[10px] mt-1 font-medium">Trust</span>
+            <span className="text-[10px] mt-1 font-medium">{t.trust}</span>
           </Link>
           <Link className="flex flex-col items-center" href="/records">
             <div className="px-5 py-1 bg-[#E8F1EC] rounded-2xl flex flex-col items-center text-[#143B35]">
               <span className="material-symbols-outlined text-[24px] filled">folder</span>
-              <span className="text-[10px] font-semibold mt-0.5">Records</span>
+              <span className="text-[10px] font-semibold mt-0.5">{t.recordsTitle}</span>
             </div>
           </Link>
           <Link className="flex flex-col items-center text-slate-500 hover:text-slate-800 transition" href="/safety">
             <span className="material-symbols-outlined text-[24px]">shield</span>
-            <span className="text-[10px] mt-1 font-medium">Safety</span>
+            <span className="text-[10px] mt-1 font-medium">{t.safety}</span>
           </Link>
         </nav>
       </main>

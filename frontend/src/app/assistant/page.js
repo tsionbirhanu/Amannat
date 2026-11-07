@@ -6,6 +6,8 @@ import { useVoxideVoice } from '@voxide/react';
 import { voice, getLanguage } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useAuth';
 import { getVoxide } from '@/lib/voxide';
+import { useLanguage } from '../../context/LanguageContext';
+import { translations } from '../../context/translations';
 
 const LANGS = {
   en: { name: 'English', speech: 'en-US' },
@@ -42,6 +44,8 @@ const ACTION_LABELS = {
 };
 
 export default function AssistantPage() {
+  const { language } = useLanguage();
+  const t = translations[language] || translations['English'];
   const router = useRouter();
   const ready = useRequireAuth();
   const [langCode] = useState(() => (typeof window === 'undefined' ? 'en' : getLanguage()));
@@ -149,7 +153,7 @@ export default function AssistantPage() {
   const statusTitle = {
     idle: question ? 'Ask another question' : 'Tap the mic to ask',
     connecting: 'Connecting…',
-    listening: "I'm listening",
+    listening: t.imListening,
     thinking: (voxMode && ACTION_LABELS[vox.currentAction]) || 'Thinking…',
     speaking: 'Speaking — tap the mic to stop',
     error: 'Something went wrong',
@@ -171,21 +175,21 @@ export default function AssistantPage() {
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
               </div>
-              <span>Home</span>
+              <span>{t.home}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-neutral-500 hover:text-neutral-800 transition-colors font-medium" href="/trust">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 <path d="m9 12 2 2 4-4"></path>
               </svg>
-              <span>Trust</span>
+              <span>{t.trust}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-neutral-500 hover:text-neutral-800 transition-colors font-medium" href="/records">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
                 <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
                 <circle cx="12" cy="13" r="1.5"></circle>
               </svg>
-              <span>Records</span>
+              <span>{t.recordsTitle}</span>
             </Link>
             <Link className="flex items-center space-x-2 text-neutral-500 hover:text-neutral-800 transition-colors font-medium" href="/safety">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -193,7 +197,7 @@ export default function AssistantPage() {
                 <line x1="12" x2="12" y1="8" y2="12"></line>
                 <line x1="12" x2="12.01" y1="16" y2="16"></line>
               </svg>
-              <span>Safety</span>
+              <span>{t.safety}</span>
             </Link>
           </div>
           <button onClick={() => router.push('/home')} className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#f0ebe1] hover:bg-[#e7e1d5] transition-colors text-neutral-700 text-sm font-semibold" type="button">
@@ -202,7 +206,7 @@ export default function AssistantPage() {
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" x2="9" y1="12" y2="12"></line>
             </svg>
-            <span>Exit Assistant</span>
+            <span>{t.exitDisguise}</span>
           </button>
         </nav>
 
@@ -241,7 +245,7 @@ export default function AssistantPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-[17px] md:text-3xl font-bold tracking-tight text-neutral-800 leading-tight">Voxide</h1>
+                  <h1 className="text-[17px] md:text-3xl font-bold tracking-tight text-neutral-800 leading-tight">{t.voxide}</h1>
                   <p className={`text-[11px] md:text-sm font-medium flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 ${voxMode ? 'text-emerald-700' : 'text-amber-700/90'}`}>
                     <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full inline-block ${voxMode ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
                     {voxMode ? 'Live voice agent' : 'Basic mode • browser voice'}
@@ -256,7 +260,7 @@ export default function AssistantPage() {
                   <polyline points="16 17 21 12 16 7"></polyline>
                   <line x1="21" x2="9" y1="12" y2="12"></line>
                 </svg>
-                <span>Exit</span>
+                <span>{t.exit}</span>
               </Link>
             </section>
 
@@ -286,7 +290,7 @@ export default function AssistantPage() {
                       <path d="m22 22-5-10-5 10"></path>
                       <path d="M14 18h6"></path>
                     </svg>
-                    <span>Change</span>
+                    <span>{t.changeLanguage}</span>
                   </button>
                 </section>
 
@@ -313,7 +317,7 @@ export default function AssistantPage() {
                     <span className="w-1 md:w-1.5 h-2.5 md:h-4 rounded-full bg-[#377b6d] animate-pulse"></span>
                   </div>
                   <h2 className="text-sm md:text-lg font-medium tracking-tight text-white mb-0.5 md:mb-1.5">{statusTitle}</h2>
-                  <p className="text-[11px] md:text-sm text-teal-100/70 font-normal">Speak naturally. Pause when you are finished.</p>
+                  <p className="text-[11px] md:text-sm text-teal-100/70 font-normal">{t.speakNaturally}</p>
                 </section>
 
                 {/* Typed question (fallback when voice is unavailable) */}
@@ -357,7 +361,7 @@ export default function AssistantPage() {
                       <line x1="16" x2="8" y1="13" y2="13"></line>
                       <line x1="16" x2="8" y1="17" y2="17"></line>
                     </svg>
-                    <span>Review Report</span>
+                    <span>{t.reviewReport}</span>
                   </Link>
                   <button onClick={listen} className="flex items-center justify-center gap-2 py-3 px-3 md:py-4 bg-[#133e36] hover:bg-[#0d2d27] text-white text-xs md:text-sm font-semibold rounded-2xl shadow-sm transition-colors active:scale-[0.98]" type="button">
                     <svg className="w-4 h-4 md:w-5 md:h-5 text-teal-200" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -365,7 +369,7 @@ export default function AssistantPage() {
                       <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                       <line x1="12" x2="12" y1="19" y2="22"></line>
                     </svg>
-                    <span>Ask again</span>
+                    <span>{t.askAgain}</span>
                   </button>
                 </section>
               </div>
@@ -374,7 +378,7 @@ export default function AssistantPage() {
               <div className="md:w-1/2 space-y-3.5 md:space-y-6 mt-4 md:mt-0">
                 {/* User Transcript Card */}
                 <section className="bg-[#efebe2] rounded-2xl md:rounded-3xl p-3.5 md:p-6 text-neutral-800">
-                  <span className="text-[10px] md:text-xs font-bold tracking-wider uppercase text-teal-900/60 block mb-1 md:mb-2">YOU SAID</span>
+                  <span className="text-[10px] md:text-xs font-bold tracking-wider uppercase text-teal-900/60 block mb-1 md:mb-2">{t.youSaid}</span>
                   <p className="text-[13px] md:text-base font-medium leading-snug md:leading-relaxed text-neutral-800">
                     {question ? `"${question}"` : <span className="text-neutral-500 font-normal">Ask about an agency, e.g. &ldquo;Is Noor Al Hayat agency safe?&rdquo;</span>}
                   </p>
@@ -387,7 +391,7 @@ export default function AssistantPage() {
                       <svg className="w-4 h-4 md:w-5 md:h-5 text-amber-600" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"></path>
                       </svg>
-                      <span>Voxide response</span>
+                      <span>{t.voxideResponse}</span>
                     </div>
                     <button onClick={playAnswer} disabled={!answer} aria-label="Listen to response" className="text-teal-800 hover:text-teal-950 transition-colors bg-teal-50 md:p-1.5 rounded-full disabled:opacity-40" type="button">
                       <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
@@ -407,7 +411,7 @@ export default function AssistantPage() {
                         <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
                         <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
                       </svg>
-                      <span>Review the salary term</span>
+                      <span>{t.reviewSalaryTerm}</span>
                     </a>
                   </div>
                 </section>
@@ -421,7 +425,7 @@ export default function AssistantPage() {
                     </svg>
                   </div>
                   <p className="text-[10.5px] md:text-[13px] leading-tight md:leading-snug text-[#2e6b56] font-normal">
-                    Voice is processed for this answer, then removed. The transcript stays only if you save it.
+                    {t.voiceProcessed}
                   </p>
                 </section>
               </div>
@@ -438,7 +442,7 @@ export default function AssistantPage() {
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
             </div>
-            <span className="text-[10px] font-semibold text-teal-900 mt-1">Home</span>
+            <span className="text-[10px] font-semibold text-teal-900 mt-1">{t.home}</span>
           </Link>
           <Link className="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-800 transition-colors" href="/trust">
             <div className="px-3 py-1">
@@ -447,7 +451,7 @@ export default function AssistantPage() {
                 <path d="m9 12 2 2 4-4"></path>
               </svg>
             </div>
-            <span className="text-[10px] font-medium mt-1">Trust</span>
+            <span className="text-[10px] font-medium mt-1">{t.trust}</span>
           </Link>
           <Link className="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-800 transition-colors" href="/records">
             <div className="px-3 py-1">
@@ -456,7 +460,7 @@ export default function AssistantPage() {
                 <circle cx="12" cy="13" r="1.5"></circle>
               </svg>
             </div>
-            <span className="text-[10px] font-medium mt-1">Records</span>
+            <span className="text-[10px] font-medium mt-1">{t.recordsTitle}</span>
           </Link>
           <Link className="flex flex-col items-center justify-center text-neutral-500 hover:text-neutral-800 transition-colors" href="/safety">
             <div className="px-3 py-1">
@@ -466,7 +470,7 @@ export default function AssistantPage() {
                 <line x1="12" x2="12.01" y1="16" y2="16"></line>
               </svg>
             </div>
-            <span className="text-[10px] font-medium mt-1">Safety/Voice</span>
+            <span className="text-[10px] font-medium mt-1">{t.safety}</span>
           </Link>
         </nav>
       </main>

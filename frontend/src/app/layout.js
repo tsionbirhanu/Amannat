@@ -1,4 +1,5 @@
 import "./globals.css";
+import { LanguageProvider } from "../context/LanguageContext";
 import Link from "next/link";
 import { headers } from "next/headers";
 import VoxideSession from "@/components/VoxideSession";
@@ -17,10 +18,12 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-background font-body-md text-on-surface antialiased">
-        <div className="w-full min-h-screen">
-          {children}
-        </div>
-        <VoxideSession />
+        <LanguageProvider>
+          <div className="w-full min-h-screen">
+            {children}
+          </div>
+          <VoxideSession />
+        </LanguageProvider>
       </body>
     </html>
   );
