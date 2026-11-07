@@ -1,6 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { headers } from "next/headers";
+import VoxideSession from "@/components/VoxideSession";
 
 export const metadata = {
   title: "Amannat",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
         <div className="w-full min-h-screen">
           {children}
         </div>
+        <VoxideSession />
       </body>
     </html>
   );

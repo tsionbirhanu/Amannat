@@ -1,7 +1,73 @@
 'use client';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { auth, safety, checkInNow } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useAuth';
+
+const parseUtc = (iso) => new Date(/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? iso : `${iso}Z`);
+
+function relativeLabel(iso) {
+  if (!iso) return 'NOT SCHEDULED';
+  const mins = Math.round((parseUtc(iso) - Date.now()) / 60000);
+  if (mins <= 0) return 'DUE NOW';
+  if (mins < 60) return `IN ${mins} MIN`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `IN ${hrs} HOUR${hrs === 1 ? '' : 'S'}`;
+  const days = Math.round(hrs / 24);
+  return `IN ${days} DAY${days === 1 ? '' : 'S'}`;
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+const nextPendingOf = (list) =>
+  list
+    .filter((c) => c.status === 'pending')
+    .sort((a, b) => parseUtc(a.scheduled_at) - parseUtc(b.scheduled_at))[0];
 
 export default function HomePage() {
+  const ready = useRequireAuth();
+  const [workerCode, setWorkerCode] = useState('');
+  const [nextCheckin, setNextCheckin] = useState(null);
+  const [online, setOnline] = useState(null);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    Promise.all([auth.me(), safety.checkins()])
+      .then(([me, checkins]) => {
+        if (cancelled) return;
+        // Short private code: last 3 characters of the worker id
+        setWorkerCode((me.id || '').slice(-3).toUpperCase());
+        setNextCheckin(nextPendingOf(checkins));
+        setOnline(true);
+      })
+      .catch(() => !cancelled && setOnline(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [ready]);
+
+  const handleSafe = async () => {
+    setCheckingIn(true);
+    setNotice('');
+    try {
+      await checkInNow();
+      setNextCheckin(nextPendingOf(await safety.checkins()));
+      setNotice('Checked in. Thank you — stay safe.');
+    } catch (err) {
+      setNotice(err.message);
+    } finally {
+      setCheckingIn(false);
+    }
+  };
+
+  if (!ready) return null;
+
   return (
     <div className="min-h-screen bg-[#F9F8F5] flex flex-col items-center font-sans">
       <main className="w-full h-[100dvh] md:h-screen bg-[#F9F8F5] flex flex-col overflow-hidden relative">
@@ -76,10 +142,12 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-[17px] md:text-2xl font-semibold text-gray-900 leading-tight">Good morning, 8K2</h1>
+                  <h1 className="text-[17px] md:text-2xl font-semibold text-gray-900 leading-tight">{greeting()}{workerCode ? `, ${workerCode}` : ''}</h1>
                   <div className="flex items-center space-x-1.5 mt-0.5 md:mt-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-600 inline-block"></span>
-                    <span className="text-xs md:text-sm text-stone-500 font-normal">Offline • will sync later</span>
+                    <span className={`w-2 h-2 rounded-full inline-block ${online === false ? 'bg-amber-600' : 'bg-emerald-600'}`}></span>
+                    <span className="text-xs md:text-sm text-stone-500 font-normal">
+                      {online === false ? 'Offline • will sync later' : online ? 'Connected' : 'Connecting…'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -104,27 +172,28 @@ export default function HomePage() {
                       </svg>
                       <span>Next check-in</span>
                     </div>
-                    <span className="text-[11px] md:text-[13px] font-bold tracking-wider text-amber-400">IN 2 HOURS</span>
+                    <span className="text-[11px] md:text-[13px] font-bold tracking-wider text-amber-400">{relativeLabel(nextCheckin?.scheduled_at)}</span>
                   </div>
                   
                   <h2 className="text-xl md:text-3xl font-semibold mt-4 md:mt-6 tracking-tight">Are you safe today?</h2>
                   <p className="text-xs md:text-sm text-stone-300 mt-1 md:mt-3 leading-relaxed pr-2">
                     Your guardian only sees if you miss a check-in — not your location.
                   </p>
-                  
+                  {notice && <p role="status" className="text-xs md:text-sm text-amber-300 mt-3">{notice}</p>}
+
                   <div className="mt-5 md:mt-8 pt-1 grid grid-cols-2 gap-2.5 md:gap-4">
-                    <button className="w-full bg-[#D9913D] hover:bg-[#C58032] transition-colors text-stone-900 font-semibold text-xs md:text-sm py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 shadow-sm active:scale-95" type="button">
+                    <button onClick={handleSafe} disabled={checkingIn} className="disabled:opacity-60 w-full bg-[#D9913D] hover:bg-[#C58032] transition-colors text-stone-900 font-semibold text-xs md:text-sm py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 shadow-sm active:scale-95" type="button">
                       <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-900 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
                       </svg>
-                      <span>I'm safe</span>
+                      <span>{checkingIn ? 'Saving…' : 'I’m safe'}</span>
                     </button>
-                    <button className="w-full bg-[#254F49] hover:bg-[#2F5D56] transition-colors text-white text-xs md:text-sm font-medium py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 active:scale-95" type="button">
+                    <Link href="/safety" className="w-full bg-[#254F49] hover:bg-[#2F5D56] transition-colors text-white text-xs md:text-sm font-medium py-3 md:py-4 px-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-1.5 active:scale-95">
                       <svg className="w-4 h-4 md:w-5 md:h-5 text-stone-300" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
                       </svg>
                       <span>Change time</span>
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </section>

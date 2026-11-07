@@ -1,7 +1,162 @@
 'use client';
 import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useVoxideVoice } from '@voxide/react';
+import { voice, getLanguage } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useAuth';
+import { getVoxide } from '@/lib/voxide';
+
+const LANGS = {
+  en: { name: 'English', speech: 'en-US' },
+  am: { name: 'Amharic', speech: 'am-ET' },
+  om: { name: 'Afaan Oromo', speech: 'om-ET' },
+  ar: { name: 'Arabic', speech: 'ar-SA' },
+};
+
+// Voxide session states -> this page's simpler states
+const VOX_STATUS = {
+  idle: 'idle',
+  armed: 'idle',
+  connecting: 'connecting',
+  listening: 'listening',
+  thinking: 'thinking',
+  executing: 'thinking',
+  speaking: 'speaking',
+  error: 'error',
+};
+const VOX_LIVE = new Set(['connecting', 'listening', 'thinking', 'executing', 'speaking']);
+
+const ACTION_LABELS = {
+  checkAgencySafety: 'Checking the agency…',
+  searchAgencies: 'Searching the registry…',
+  checkInSafe: 'Checking you in…',
+  sendUrgentAlert: 'Sending urgent alert…',
+  getHotlines: 'Finding hotlines…',
+  getMyContract: 'Reading your contract…',
+  getWageSummary: 'Adding up your wages…',
+  logWagePayment: 'Saving the payment…',
+  listGuardians: 'Looking up your guardians…',
+  draftIncidentReport: 'Preparing your report…',
+  navigate: 'Opening the page…',
+};
 
 export default function AssistantPage() {
+  const router = useRouter();
+  const ready = useRequireAuth();
+  const [langCode] = useState(() => (typeof window === 'undefined' ? 'en' : getLanguage()));
+  const lang = LANGS[langCode] || LANGS.en;
+
+  // ---- Voxide live agent (preferred) ----
+  const ai = useMemo(() => getVoxide(), []);
+  const vox = useVoxideVoice(ai);
+  const [voxInitError, setVoxInitError] = useState('');
+  useEffect(() => {
+    if (!ai) return;
+    ai.init().catch((err) => setVoxInitError(err?.message || 'Voxide could not start'));
+  }, [ai]);
+  const voxMode = !!ai && !voxInitError && vox.status !== 'error';
+  const voxError = ai && (voxInitError || vox.status === 'error')
+    ? vox.errorCode === 'usage_limit'
+      ? 'Voxide voice minutes for this project are used up. Using basic mode.'
+      : `Voxide is unavailable${voxInitError ? ` (${voxInitError})` : ''}. Using basic mode.`
+    : '';
+  const lastOf = (role) => [...vox.messages].reverse().find((m) => m.role === role)?.text || '';
+
+  // ---- Basic mode: browser speech + POST /voice/query (fallback) ----
+  const [basicQuestion, setBasicQuestion] = useState('');
+  const [draft, setDraft] = useState('');
+  const [basicAnswer, setBasicAnswer] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [basicStatus, setBasicStatus] = useState('idle'); // idle | listening | thinking | error
+  const [error, setError] = useState('');
+  const recognitionRef = useRef(null);
+
+  const status = voxMode ? VOX_STATUS[vox.status] || 'idle' : basicStatus;
+  const question = voxMode ? lastOf('user') : basicQuestion;
+  const answer = voxMode ? lastOf('ai') || null : basicAnswer;
+  const setStatus = setBasicStatus;
+  const setQuestion = setBasicQuestion;
+  const setAnswer = setBasicAnswer;
+
+  const ask = async (text) => {
+    const clean = text.trim();
+    if (!clean) return;
+    setDraft('');
+    setError('');
+    if (voxMode) {
+      // Same session as voice; the agent replies in text and (if connected) out loud
+      await vox.sendText(clean);
+      return;
+    }
+    setQuestion(clean);
+    setStatus('thinking');
+    try {
+      const res = await voice.query(clean, { language: langCode });
+      setAnswer(res.answer_text);
+      setAudioUrl(res.answer_audio_url);
+      setStatus('idle');
+    } catch (err) {
+      setError(err.message);
+      setStatus('error');
+    }
+  };
+
+  const listen = () => {
+    if (voxMode) {
+      setError('');
+      if (VOX_LIVE.has(vox.status)) vox.disconnect();
+      else vox.connect();
+      return;
+    }
+    const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SR) {
+      setError('Voice input is not supported in this browser. Please type your question below.');
+      return;
+    }
+    if (status === 'listening') {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const rec = new SR();
+    rec.lang = lang.speech;
+    rec.interimResults = false;
+    rec.onresult = (e) => ask(e.results[0][0].transcript);
+    rec.onerror = (e) => {
+      setError(e.error === 'not-allowed' ? 'Microphone permission was denied.' : 'I could not hear you. Please try again.');
+      setStatus('error');
+    };
+    rec.onend = () => setStatus((s) => (s === 'listening' ? 'idle' : s));
+    recognitionRef.current = rec;
+    setError('');
+    setStatus('listening');
+    rec.start();
+  };
+
+  const playAnswer = () => {
+    if (!answer) return;
+    // The backend TTS is still a stub (stub://...), so fall back to the browser's voice.
+    if (audioUrl && /^https?:/.test(audioUrl)) {
+      new Audio(audioUrl).play();
+    } else if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(answer);
+      u.lang = lang.speech;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }
+  };
+
+  const statusTitle = {
+    idle: question ? 'Ask another question' : 'Tap the mic to ask',
+    connecting: 'Connecting…',
+    listening: "I'm listening",
+    thinking: (voxMode && ACTION_LABELS[vox.currentAction]) || 'Thinking…',
+    speaking: 'Speaking — tap the mic to stop',
+    error: 'Something went wrong',
+  }[status];
+
+  if (!ready) return null;
+
   return (
     <div className="min-h-screen bg-[#1e1e1e] md:bg-[#fbf9f4] flex flex-col items-center font-sans text-[#1c2e28]">
       <main className="w-full h-[100dvh] md:h-screen bg-[#fbf9f4] flex flex-col overflow-hidden relative">
@@ -41,7 +196,7 @@ export default function AssistantPage() {
               <span>Safety</span>
             </Link>
           </div>
-          <button className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#f0ebe1] hover:bg-[#e7e1d5] transition-colors text-neutral-700 text-sm font-semibold" type="button">
+          <button onClick={() => router.push('/home')} className="flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#f0ebe1] hover:bg-[#e7e1d5] transition-colors text-neutral-700 text-sm font-semibold" type="button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
@@ -87,9 +242,9 @@ export default function AssistantPage() {
                 </div>
                 <div>
                   <h1 className="text-[17px] md:text-3xl font-bold tracking-tight text-neutral-800 leading-tight">Voxide</h1>
-                  <p className="text-[11px] md:text-sm font-medium text-amber-700/90 flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
-                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-600 inline-block"></span>
-                    Offline • will sync later
+                  <p className={`text-[11px] md:text-sm font-medium flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 ${voxMode ? 'text-emerald-700' : 'text-amber-700/90'}`}>
+                    <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full inline-block ${voxMode ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
+                    {voxMode ? 'Live voice agent' : 'Basic mode • browser voice'}
                   </p>
                 </div>
               </div>
@@ -120,9 +275,9 @@ export default function AssistantPage() {
                       <path d="M18 5v13"></path>
                       <path d="M22 10v4"></path>
                     </svg>
-                    <span>Listening • English</span>
+                    <span>{status === 'listening' ? 'Listening' : 'Language'} • {lang.name}</span>
                   </div>
-                  <button className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-white text-neutral-600 border border-neutral-200 shadow-sm font-medium hover:bg-neutral-50 transition-colors" type="button">
+                  <button onClick={() => router.push('/register')} className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-white text-neutral-600 border border-neutral-200 shadow-sm font-medium hover:bg-neutral-50 transition-colors" type="button">
                     <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-teal-700" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="m5 8 6 6"></path>
                       <path d="m4 14 6-6 2-3"></path>
@@ -137,16 +292,16 @@ export default function AssistantPage() {
 
                 {/* Visualizer Card */}
                 <section className="bg-[#133e36] rounded-2xl md:rounded-3xl p-5 md:p-8 text-white flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
-                  <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-[#dca14c]/30 flex items-center justify-center p-1.5 md:p-2 mb-4 md:mb-6">
-                    <div className="w-full h-full rounded-full bg-[#dca14c] flex items-center justify-center shadow-inner">
+                  <button type="button" onClick={listen} aria-label={status === 'idle' || status === 'error' ? 'Start listening' : 'Stop listening'} className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-[#dca14c]/30 flex items-center justify-center p-1.5 md:p-2 mb-4 md:mb-6 active:scale-95 transition">
+                    <div className={`w-full h-full rounded-full bg-[#dca14c] flex items-center justify-center shadow-inner ${status === 'listening' ? 'animate-pulse' : ''}`}>
                       <svg className="w-6 h-6 md:w-10 md:h-10 text-[#133e36]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                         <line x1="12" x2="12" y1="19" y2="22"></line>
                       </svg>
                     </div>
-                  </div>
-                  <div aria-hidden="true" className="flex items-center justify-center gap-1.5 md:gap-2 h-9 md:h-12 mb-3 md:mb-5">
+                  </button>
+                  <div aria-hidden="true" className={`flex items-center justify-center gap-1.5 md:gap-2 h-9 md:h-12 mb-3 md:mb-5 ${['listening', 'thinking', 'speaking', 'connecting'].includes(status) ? '' : 'opacity-40 [&>span]:animate-none'}`}>
                     <span className="w-1 md:w-1.5 h-2 md:h-3 rounded-full bg-[#377b6d] animate-pulse"></span>
                     <span className="w-1 md:w-1.5 h-4 md:h-6 rounded-full bg-[#418f7f] animate-pulse" style={{ animationDelay: '100ms' }}></span>
                     <span className="w-1 md:w-1.5 h-6 md:h-10 rounded-full bg-[#4ba391] animate-pulse" style={{ animationDelay: '200ms' }}></span>
@@ -157,9 +312,41 @@ export default function AssistantPage() {
                     <span className="w-1 md:w-1.5 h-5 md:h-8 rounded-full bg-[#418f7f] animate-pulse" style={{ animationDelay: '50ms' }}></span>
                     <span className="w-1 md:w-1.5 h-2.5 md:h-4 rounded-full bg-[#377b6d] animate-pulse"></span>
                   </div>
-                  <h2 className="text-sm md:text-lg font-medium tracking-tight text-white mb-0.5 md:mb-1.5">I'm listening</h2>
+                  <h2 className="text-sm md:text-lg font-medium tracking-tight text-white mb-0.5 md:mb-1.5">{statusTitle}</h2>
                   <p className="text-[11px] md:text-sm text-teal-100/70 font-normal">Speak naturally. Pause when you are finished.</p>
                 </section>
+
+                {/* Typed question (fallback when voice is unavailable) */}
+                <form
+                  onSubmit={(e) => { e.preventDefault(); ask(draft); }}
+                  className="flex items-center gap-2 bg-white rounded-2xl border border-neutral-200 shadow-sm p-1.5 pl-3.5"
+                >
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="Or type your question…"
+                    className="flex-1 bg-transparent border-0 p-0 text-[13px] md:text-base focus:ring-0 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === 'thinking' || !draft.trim()}
+                    className="px-3.5 py-2 rounded-xl bg-[#133e36] text-white text-xs md:text-sm font-semibold disabled:opacity-50"
+                  >
+                    Ask
+                  </button>
+                </form>
+
+                {error && (
+                  <p role="alert" className="text-[12px] md:text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3">{error}</p>
+                )}
+                {voxError && (
+                  <p role="status" className="text-[12px] md:text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    {voxError}{' '}
+                    {!voxInitError && (
+                      <button type="button" onClick={() => vox.connect()} className="font-semibold underline">Retry Voxide</button>
+                    )}
+                  </p>
+                )}
                 
                 {/* Action Buttons (Desktop moves these below visualizer) */}
                 <section className="grid grid-cols-2 gap-3 pt-1 md:pt-2">
@@ -172,7 +359,7 @@ export default function AssistantPage() {
                     </svg>
                     <span>Review Report</span>
                   </Link>
-                  <button className="flex items-center justify-center gap-2 py-3 px-3 md:py-4 bg-[#133e36] hover:bg-[#0d2d27] text-white text-xs md:text-sm font-semibold rounded-2xl shadow-sm transition-colors active:scale-[0.98]" type="button">
+                  <button onClick={listen} className="flex items-center justify-center gap-2 py-3 px-3 md:py-4 bg-[#133e36] hover:bg-[#0d2d27] text-white text-xs md:text-sm font-semibold rounded-2xl shadow-sm transition-colors active:scale-[0.98]" type="button">
                     <svg className="w-4 h-4 md:w-5 md:h-5 text-teal-200" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
                       <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
                       <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -189,7 +376,7 @@ export default function AssistantPage() {
                 <section className="bg-[#efebe2] rounded-2xl md:rounded-3xl p-3.5 md:p-6 text-neutral-800">
                   <span className="text-[10px] md:text-xs font-bold tracking-wider uppercase text-teal-900/60 block mb-1 md:mb-2">YOU SAID</span>
                   <p className="text-[13px] md:text-base font-medium leading-snug md:leading-relaxed text-neutral-800">
-                    "My contract says 1,200 riyals, but the agency told me 1,500. Which is correct?"
+                    {question ? `"${question}"` : <span className="text-neutral-500 font-normal">Ask about an agency, e.g. &ldquo;Is Noor Al Hayat agency safe?&rdquo;</span>}
                   </p>
                 </section>
 
@@ -202,7 +389,7 @@ export default function AssistantPage() {
                       </svg>
                       <span>Voxide response</span>
                     </div>
-                    <button aria-label="Listen to response" className="text-teal-800 hover:text-teal-950 transition-colors bg-teal-50 md:p-1.5 rounded-full" type="button">
+                    <button onClick={playAnswer} disabled={!answer} aria-label="Listen to response" className="text-teal-800 hover:text-teal-950 transition-colors bg-teal-50 md:p-1.5 rounded-full disabled:opacity-40" type="button">
                       <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
                         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -210,10 +397,10 @@ export default function AssistantPage() {
                     </button>
                   </div>
                   <p className="text-[12.5px] md:text-base leading-relaxed text-neutral-700">
-                    The written contract is the record you can prove. The amount differs, so I marked it for review before you travel.
+                    {status === 'thinking' ? 'Thinking…' : answer || 'The answer will appear here.'}
                   </p>
                   <div className="pt-1 md:pt-2">
-                    <a className="inline-flex items-center gap-1.5 text-[11.5px] md:text-sm font-semibold text-[#b86f1e] hover:text-[#995914] transition-colors" href="#">
+                    <a className="inline-flex items-center gap-1.5 text-[11.5px] md:text-sm font-semibold text-[#b86f1e] hover:text-[#995914] transition-colors" href="/review">
                       <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
                         <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
                         <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>

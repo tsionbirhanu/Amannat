@@ -1,14 +1,55 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth, setLanguage } from '@/lib/api';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [selectedLang, setSelectedLang] = useState('English');
+  // 'lang' -> choose language, 'phone' -> enter phone, 'code' -> enter OTP
+  const [step, setStep] = useState('lang');
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
   const handleContinue = () => {
-    // Navigate to the home dashboard after selection
-    router.push('/home');
+    const lang = languages.find((l) => l.name === selectedLang);
+    setLanguage(lang?.id || 'en');
+    setError('');
+    setStep('phone');
+  };
+
+  const handleRequestOtp = async (e) => {
+    e.preventDefault();
+    if (!phone.trim()) return setError('Please enter your phone number.');
+    setBusy(true);
+    setError('');
+    try {
+      await auth.requestOtp(phone.trim());
+      setInfo('We sent a 6-digit code to your phone.');
+      setStep('code');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (!code.trim()) return setError('Please enter the code.');
+    setBusy(true);
+    setError('');
+    try {
+      await auth.verifyOtp(phone.trim(), code.trim());
+      router.push('/home');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const languages = [
@@ -83,6 +124,8 @@ export default function RegisterPage() {
         {/* Right/Bottom Selection Area */}
         <div className="px-5 md:px-12 lg:px-20 pt-5 md:pt-0 pb-3 md:pb-0 flex-1 flex flex-col justify-between md:justify-center md:items-center overflow-y-auto">
           <div className="w-full md:max-w-lg md:mx-auto flex flex-col justify-center my-auto py-4">
+            {step === 'lang' && (
+            <>
             <div className="mb-4 md:mb-6">
               <h2 className="text-[20px] md:text-2xl font-semibold tracking-tight text-gray-900 md:mb-1">Choose your language</h2>
               <p className="text-[12.5px] md:text-sm leading-relaxed text-gray-500 mt-0.5">
@@ -152,6 +195,73 @@ export default function RegisterPage() {
                 <span>Continue in {selectedLang}</span>
               </button>
               
+            </div>
+            </>
+            )}
+
+            {step !== 'lang' && (
+              <form onSubmit={step === 'phone' ? handleRequestOtp : handleVerify} className="space-y-4">
+                <div>
+                  <h2 className="text-[20px] md:text-2xl font-semibold tracking-tight text-gray-900 md:mb-1">
+                    {step === 'phone' ? 'Your phone number' : 'Enter your code'}
+                  </h2>
+                  <p className="text-[12.5px] md:text-sm leading-relaxed text-gray-500 mt-0.5">
+                    {step === 'phone'
+                      ? 'We send a one-time code by SMS. Your number is only used to sign in.'
+                      : info || `Enter the code sent to ${phone}.`}
+                  </p>
+                </div>
+
+                {step === 'phone' ? (
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    autoFocus
+                    placeholder="+251 9xx xxx xxx"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-gray-200 text-[15px] md:text-base focus:border-[#143e35] focus:ring-[#143e35]"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    maxLength={6}
+                    placeholder="6-digit code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-gray-200 text-[15px] md:text-base tracking-[0.3em] focus:border-[#143e35] focus:ring-[#143e35]"
+                  />
+                )}
+
+                {error && (
+                  <p role="alert" className="text-[12.5px] md:text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full py-3.5 md:py-4 px-4 bg-[#143e35] hover:bg-[#0f322b] disabled:opacity-60 text-white rounded-xl md:rounded-2xl font-normal text-[15px] md:text-base shadow-sm active:scale-[0.985] transition cursor-pointer"
+                >
+                  {busy ? 'Please wait…' : step === 'phone' ? 'Send code' : 'Verify and continue'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setError(''); setStep(step === 'code' ? 'phone' : 'lang'); }}
+                  className="w-full text-[13px] md:text-sm text-gray-500 hover:text-gray-800"
+                >
+                  {step === 'code' ? 'Use a different number' : 'Back to language'}
+                </button>
+              </form>
+            )}
+
+            <div>
               {/* Home Bar Indicator (Hide on Desktop) */}
               <div aria-hidden="true" className="md:hidden w-full flex justify-center pt-1">
                 <div className="w-32 h-1 bg-neutral-300 rounded-full"></div>

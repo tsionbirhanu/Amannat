@@ -1,7 +1,140 @@
 'use client';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { voice, report, workers, agency as agencyApi, getLanguage } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useAuth';
+
+const CATEGORIES = [
+  { id: 'wage_nonpayment', label: 'Wages not paid' },
+  { id: 'contract_substitution', label: 'Contract changed after signing' },
+  { id: 'abuse', label: 'Abuse' },
+  { id: 'passport_confiscation', label: 'Passport is being kept' },
+];
+const SPEECH_LANG = { en: 'en-US', am: 'am-ET', om: 'om-ET', ar: 'ar-SA' };
+const DRAFT_KEY = 'amannat_incident_draft';
+
+const emptyDraft = { description: '', category: '', agencyId: null, agencyName: '' };
+
+function loadDraft() {
+  try {
+    return { ...emptyDraft, ...JSON.parse(window.localStorage.getItem(DRAFT_KEY) || '{}') };
+  } catch {
+    return emptyDraft;
+  }
+}
 
 export default function IncidentReviewPage() {
+  const ready = useRequireAuth();
+  const [draft, setDraft] = useState(() => (typeof window === 'undefined' ? emptyDraft : loadDraft()));
+  // Agencies the worker has a contract with: the backend only accepts reports about these (FR-2.3)
+  const [myAgencies, setMyAgencies] = useState(null); // null = loading
+  const [consent, setConsent] = useState(false);
+  const [status, setStatus] = useState('draft'); // draft | analyzing | sending | sent
+  const [message, setMessage] = useState(null); // { type, text }
+
+  const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
+  const categoryLabel = CATEGORIES.find((c) => c.id === draft.category)?.label;
+
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    (async () => {
+      const contracts = await workers.contracts();
+      const ids = [...new Set(contracts.map((c) => c.agency_id).filter(Boolean))];
+      const agencies = await Promise.all(ids.map((id) => agencyApi.get(id).catch(() => null)));
+      return agencies.filter(Boolean).map((a) => ({ id: a.id, name: a.name }));
+    })()
+      .then((list) => {
+        if (cancelled) return;
+        setMyAgencies(list);
+        // Only one agency? Pre-select it.
+        if (list.length === 1) setDraft((d) => (d.agencyId ? d : { ...d, agencyId: list[0].id, agencyName: list[0].name }));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setMyAgencies([]);
+        setMessage({ type: 'error', text: err.message });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready]);
+
+  const pickAgency = (id) => {
+    const a = myAgencies?.find((x) => x.id === id);
+    set({ agencyId: a?.id || null, agencyName: a?.name || '' });
+  };
+
+  // Ask the backend to guess the category and agency from the description
+  const analyze = async () => {
+    if (!draft.description.trim()) return setMessage({ type: 'error', text: 'Describe what happened first.' });
+    setStatus('analyzing');
+    setMessage(null);
+    try {
+      const res = await voice.report(draft.description.trim());
+      const known = myAgencies?.find((a) => a.id === res.agency_id);
+      set({
+        category: CATEGORIES.some((c) => c.id === res.category_guess) ? res.category_guess : draft.category,
+        ...(known ? { agencyId: known.id, agencyName: known.name } : {}),
+      });
+      if (res.agency_id && !known) {
+        setMessage({
+          type: 'error',
+          text: `It sounds like this is about ${res.agency_name_guess || 'an agency'}, but you have no saved contract with them. Add that contract in Records first.`,
+        });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setStatus('draft');
+    }
+  };
+
+  const listen = () => {
+    if (!('speechSynthesis' in window)) return;
+    const text = [
+      categoryLabel && `Concern: ${categoryLabel}.`,
+      draft.agencyName && `Agency: ${draft.agencyName}.`,
+      draft.description,
+    ].filter(Boolean).join(' ');
+    if (!text) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = SPEECH_LANG[getLanguage()] || 'en-US';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  };
+
+  const saveDraft = () => {
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      setMessage({ type: 'ok', text: 'Draft saved on this device.' });
+    } catch {
+      setMessage({ type: 'error', text: 'Could not save the draft on this device.' });
+    }
+  };
+
+  const send = async () => {
+    if (!draft.category) return setMessage({ type: 'error', text: 'Choose what the concern is.' });
+    if (!draft.agencyId) return setMessage({ type: 'error', text: 'Choose the agency this report is about.' });
+    if (!consent) return setMessage({ type: 'error', text: 'Please tick the consent box before sending.' });
+    setStatus('sending');
+    setMessage(null);
+    try {
+      await report.submit({ agencyId: draft.agencyId, category: draft.category, description: draft.description });
+      try { window.localStorage.removeItem(DRAFT_KEY); } catch {}
+      setStatus('sent');
+      setMessage({ type: 'ok', text: 'Report sent. It is queued for review and your name is not shared.' });
+    } catch (err) {
+      setStatus('draft');
+      setMessage({
+        type: 'error',
+        text: err.status === 403 ? 'You can only report an agency you have a saved contract with. Add the contract in Records first.' : err.message,
+      });
+    }
+  };
+
+  if (!ready) return null;
+
   return (
     <div className="min-h-screen bg-[#1F1F1F] md:bg-[#FBF9F4] flex flex-col items-center font-sans text-slate-800 selection:bg-teal-200">
       <main className="w-full h-[100dvh] md:h-screen bg-[#FBF9F4] flex flex-col overflow-hidden relative">
@@ -82,17 +215,17 @@ export default function IncidentReviewPage() {
                 {/* Audio Summary Card */}
                 <section className="bg-[#183B32] text-white rounded-2xl md:rounded-3xl p-3.5 md:p-5 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-3 md:gap-4">
-                    <button aria-label="Play audio summary" className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-[#DE9E46] text-[#122D26] flex items-center justify-center shrink-0 active:scale-95 transition-transform shadow-inner hover:bg-[#c98f3f]">
+                    <button type="button" onClick={listen} aria-label="Play audio summary" className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-[#DE9E46] text-[#122D26] flex items-center justify-center shrink-0 active:scale-95 transition-transform shadow-inner hover:bg-[#c98f3f]">
                       <span className="material-symbols-outlined text-[24px] md:text-[32px] ml-0.5">play_arrow</span>
                     </button>
                     <div>
                       <h2 className="text-[14px] md:text-lg font-semibold leading-tight text-white">Listen before you decide</h2>
-                      <p className="text-[11px] md:text-sm text-stone-300 font-normal mt-0.5 md:mt-1">Voxide summary • 46 sec • English</p>
+                      <p className="text-[11px] md:text-sm text-stone-300 font-normal mt-0.5 md:mt-1">Hear your report read back</p>
                     </div>
                   </div>
                   <div className="bg-white/95 text-slate-700 text-[11px] md:text-sm font-medium px-2 md:px-3 py-1 md:py-1.5 rounded-full flex items-center gap-1 shadow-sm shrink-0">
-                    <span className="material-symbols-outlined text-[14px] md:text-[18px] text-stone-500">schedule</span>
-                    <span>Not sent</span>
+                    <span className="material-symbols-outlined text-[14px] md:text-[18px] text-stone-500">{status === 'sent' ? 'check' : 'schedule'}</span>
+                    <span>{status === 'sent' ? 'Sent' : 'Not sent'}</span>
                   </div>
                 </section>
 
@@ -100,55 +233,65 @@ export default function IncidentReviewPage() {
                 <section className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm border border-stone-200/50 flex-1">
                   <div className="flex items-center justify-between pb-3 md:pb-4 border-b border-stone-100">
                     <h2 className="text-[15px] md:text-lg font-bold text-slate-800">What I reported</h2>
-                    <button className="text-[12px] md:text-sm font-medium text-emerald-800 flex items-center gap-1 hover:text-emerald-900 transition-colors" type="button">
-                      <span>Edit by voice</span>
-                      <span className="material-symbols-outlined text-[16px] md:text-[18px]">mic</span>
+                    <button onClick={analyze} disabled={status !== 'draft'} className="text-[12px] md:text-sm font-medium text-emerald-800 flex items-center gap-1 hover:text-emerald-900 transition-colors disabled:opacity-50" type="button">
+                      <span>{status === 'analyzing' ? 'Reading…' : 'Fill in for me'}</span>
+                      <span className="material-symbols-outlined text-[16px] md:text-[18px]">auto_awesome</span>
                     </button>
                   </div>
-                  
-                  <div className="divide-y divide-stone-100 text-[12px] md:text-sm mt-1 md:mt-2">
-                    <div className="py-2.5 md:py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 text-stone-500 w-[95px] md:w-[130px] shrink-0">
-                        <span className="material-symbols-outlined text-[18px] md:text-[22px]">radio_button_unchecked</span>
-                        <span>Concern</span>
-                      </div>
-                      <div className="flex-1 text-slate-800 font-medium px-2 md:px-4">Passport is being kept</div>
-                      <button aria-label="Edit concern" className="text-stone-400 hover:text-stone-600 transition-colors p-1" type="button">
-                        <span className="material-symbols-outlined text-[16px] md:text-[20px]">edit</span>
-                      </button>
-                    </div>
-                    
-                    <div className="py-2.5 md:py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 text-stone-500 w-[95px] md:w-[130px] shrink-0">
-                        <span className="material-symbols-outlined text-[18px] md:text-[22px]">calendar_today</span>
-                        <span>When</span>
-                      </div>
-                      <div className="flex-1 text-slate-800 font-medium px-2 md:px-4">Since 18 September 2026</div>
-                      <button aria-label="Edit date" className="text-stone-400 hover:text-stone-600 transition-colors p-1" type="button">
-                        <span className="material-symbols-outlined text-[16px] md:text-[20px]">edit</span>
-                      </button>
-                    </div>
-                    
-                    <div className="py-2.5 md:py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 text-stone-500 w-[95px] md:w-[130px] shrink-0">
-                        <span className="material-symbols-outlined text-[18px] md:text-[22px]">shield</span>
-                        <span>Safety now</span>
-                      </div>
-                      <div className="flex-1 text-slate-800 font-medium px-2 md:px-4">Safe to receive a call</div>
-                      <button aria-label="Edit safety condition" className="text-stone-400 hover:text-stone-600 transition-colors p-1" type="button">
-                        <span className="material-symbols-outlined text-[16px] md:text-[20px]">edit</span>
-                      </button>
-                    </div>
-                    
-                    <div className="pt-2.5 md:pt-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 text-stone-500 w-[95px] md:w-[130px] shrink-0">
+
+                  <div className="text-[12px] md:text-sm mt-3 md:mt-4 space-y-3 md:space-y-4">
+                    <label className="block">
+                      <span className="flex items-center gap-2 text-stone-500 mb-1">
                         <span className="material-symbols-outlined text-[18px] md:text-[22px]">description</span>
-                        <span>Evidence</span>
-                      </div>
-                      <div className="flex-1 text-slate-800 font-medium px-2 md:px-4 truncate">1 voice note, contract page</div>
-                      <button aria-label="Edit evidence" className="text-stone-400 hover:text-stone-600 transition-colors p-1" type="button">
-                        <span className="material-symbols-outlined text-[16px] md:text-[20px]">edit</span>
-                      </button>
+                        What happened
+                      </span>
+                      <textarea
+                        rows={4}
+                        value={draft.description}
+                        onChange={(e) => set({ description: e.target.value })}
+                        placeholder="e.g. My employer at Noor Al Hayat agency has kept my passport since September."
+                        className="w-full rounded-xl border-stone-200 text-sm"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="flex items-center gap-2 text-stone-500 mb-1">
+                        <span className="material-symbols-outlined text-[18px] md:text-[22px]">radio_button_unchecked</span>
+                        Concern
+                      </span>
+                      <select value={draft.category} onChange={(e) => set({ category: e.target.value })} className="w-full rounded-xl border-stone-200 text-sm">
+                        <option value="">Choose…</option>
+                        {CATEGORIES.map((c) => (
+                          <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <div>
+                      <label htmlFor="incident-agency" className="flex items-center gap-2 text-stone-500 mb-1">
+                        <span className="material-symbols-outlined text-[18px] md:text-[22px]">corporate_fare</span>
+                        Agency you worked with
+                      </label>
+                      {myAgencies === null ? (
+                        <p className="text-stone-500">Loading your agencies…</p>
+                      ) : myAgencies.length === 0 ? (
+                        <p className="text-stone-600 bg-stone-50 border border-stone-200 rounded-xl p-3">
+                          You can report an agency once you have saved a contract with it. This keeps reports genuine.{' '}
+                          <Link href="/records" className="font-semibold text-emerald-800 underline">Add your contract</Link>
+                        </p>
+                      ) : (
+                        <select
+                          id="incident-agency"
+                          value={draft.agencyId || ''}
+                          onChange={(e) => pickAgency(e.target.value)}
+                          className="w-full rounded-xl border-stone-200 text-sm"
+                        >
+                          <option value="">Choose…</option>
+                          {myAgencies.map((a) => (
+                            <option key={a.id} value={a.id}>{a.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                 </section>
@@ -193,14 +336,21 @@ export default function IncidentReviewPage() {
                   </div>
                 </section>
 
-                <section className="bg-[#FDF6E9] border border-[#D9984E]/80 rounded-2xl md:rounded-3xl p-3.5 md:p-5 flex items-start gap-3 shadow-xs">
-                  <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-[#183B32] text-white flex items-center justify-center shrink-0 mt-0.5 md:mt-0.5">
-                    <span className="material-symbols-outlined text-[16px] md:text-[18px]">check</span>
-                  </div>
-                  <p className="text-[12px] md:text-sm text-slate-800 font-normal leading-snug">
+                <label className="bg-[#FDF6E9] border border-[#D9984E]/80 rounded-2xl md:rounded-3xl p-3.5 md:p-5 flex items-start gap-3 shadow-xs cursor-pointer">
+                  <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="w-5 h-5 md:w-6 md:h-6 rounded-md text-[#183B32] focus:ring-[#183B32] shrink-0 mt-0.5" />
+                  <span className="text-[12px] md:text-sm text-slate-800 font-normal leading-snug">
                     I understand what will be shared and consent to send this report.
+                  </span>
+                </label>
+
+                {message && (
+                  <p
+                    role={message.type === 'error' ? 'alert' : 'status'}
+                    className={`text-xs md:text-sm rounded-xl p-3 border ${message.type === 'error' ? 'text-red-700 bg-red-50 border-red-100' : 'text-emerald-900 bg-emerald-50 border-emerald-100'}`}
+                  >
+                    {message.text}
                   </p>
-                </section>
+                )}
 
                 <section className="bg-[#E2EFE7]/70 md:bg-[#E2EFE7]/50 rounded-2xl md:rounded-3xl p-3 md:p-5 flex items-start gap-2.5 md:gap-3 text-emerald-950 mt-auto md:mt-2">
                   <span className="material-symbols-outlined text-[18px] md:text-[22px] text-emerald-900 mt-0.5 md:mt-0 shrink-0">info</span>
@@ -210,13 +360,13 @@ export default function IncidentReviewPage() {
                 </section>
 
                 <section className="grid grid-cols-2 gap-3 pt-1 md:pt-4">
-                  <button className="w-full bg-white border border-stone-300 text-slate-800 font-semibold py-3 md:py-4 px-3 rounded-2xl md:rounded-3xl flex items-center justify-center gap-2 text-[13px] md:text-base shadow-xs active:bg-stone-50 hover:bg-stone-50 transition-all active:scale-[0.98]">
+                  <button type="button" onClick={saveDraft} disabled={status === 'sent'} className="disabled:opacity-50 w-full bg-white border border-stone-300 text-slate-800 font-semibold py-3 md:py-4 px-3 rounded-2xl md:rounded-3xl flex items-center justify-center gap-2 text-[13px] md:text-base shadow-xs active:bg-stone-50 hover:bg-stone-50 transition-all active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[22px] text-stone-600">save</span>
                     <span>Save draft</span>
                   </button>
-                  <button className="w-full bg-[#183B32] text-white font-semibold py-3 md:py-4 px-3 rounded-2xl md:rounded-3xl flex items-center justify-center gap-2 text-[13px] md:text-base shadow-md active:bg-[#122D26] hover:bg-[#122D26] transition-all active:scale-[0.98]">
+                  <button type="button" onClick={send} disabled={status === 'sending' || status === 'sent'} className="disabled:opacity-60 w-full bg-[#183B32] text-white font-semibold py-3 md:py-4 px-3 rounded-2xl md:rounded-3xl flex items-center justify-center gap-2 text-[13px] md:text-base shadow-md active:bg-[#122D26] hover:bg-[#122D26] transition-all active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[22px]">send</span>
-                    <span>Consent & send</span>
+                    <span>{status === 'sending' ? 'Sending…' : status === 'sent' ? 'Sent' : 'Consent & send'}</span>
                   </button>
                 </section>
               </div>

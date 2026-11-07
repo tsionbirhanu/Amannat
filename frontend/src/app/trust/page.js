@@ -1,70 +1,110 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { agency as agencyApi, isLoggedIn } from '@/lib/api';
+
+const CATEGORY_LABELS = {
+  wage_nonpayment: 'Wages not paid',
+  contract_substitution: 'Contract changed after signing',
+  abuse: 'Abuse reported',
+  passport_confiscation: 'Passport held by employer',
+};
+
+const LICENSE_LABELS = {
+  verified: 'License verified',
+  unverified: 'Not yet verified',
+  flagged: 'Flagged',
+};
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// Convert a backend Agency (+ optional report_flags) into what this page renders.
+function toView(a, flags = null) {
+  const status = a.verification_status === 'verified' ? 'active' : 'warning';
+  const total = flags ? flags.reduce((sum, f) => sum + f.count, 0) : null;
+  const concern =
+    a.verification_status === 'flagged' || total >= 3 ? 'High' : total > 0 ? 'Medium' : total === 0 ? 'Low' : '—';
+  return {
+    id: a.id,
+    name: a.name,
+    location: a.location || 'Location not listed',
+    licenseNo: a.license_no,
+    phone: a.phone,
+    verification: a.verification_status,
+    status,
+    icon: status === 'active' ? 'verified' : 'corporate_fare',
+    license: LICENSE_LABELS[a.verification_status] || a.verification_status,
+    flag: a.verification_status === 'flagged' ? 'Flagged by reviewers' : 'Tap to see worker reports',
+    stats: {
+      records: total ?? '…',
+      concern,
+      patterns: (flags || []).map((f) => ({
+        type: 'warning',
+        label: CATEGORY_LABELS[f.category] || f.category,
+        count: plural(f.count, 'report'),
+      })),
+    },
+  };
+}
 
 export default function TrustRegistryPage() {
   const [activeAgency, setActiveAgency] = useState(null);
+  const [query, setQuery] = useState('');
+  const [agencies, setAgencies] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
-  const agencies = [
-    {
-      id: 1,
-      name: 'Al Noor Recruitment PLC',
-      location: 'Addis Ababa',
-      destination: 'Saudi Arabia',
-      status: 'active', // active, warning
-      icon: 'verified',
-      color: 'emerald',
-      license: 'active',
-      flag: 'No repeated flags',
-      stats: {
-        years: '4.2',
-        records: '62',
-        concern: 'Low',
-        patterns: [
-          { type: 'positive', label: 'Salary matched signed contract', count: '58 of 62' }
-        ]
+  // Debounced search against GET /agency/search
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await agencyApi.search(q);
+        if (!cancelled) {
+          setAgencies(results.map((a) => toView(a)));
+          setError('');
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setSearching(false);
       }
-    },
-    {
-      id: 2,
-      name: 'Al Noor Overseas Services',
-      location: 'Adama',
-      destination: 'Gulf',
-      status: 'warning',
-      icon: 'corporate_fare',
-      color: 'amber',
-      license: 'Renewal pending',
-      flag: '3 salary mismatch patterns',
-      stats: {
-        years: '2.1',
-        records: '14',
-        concern: 'High',
-        patterns: [
-          { type: 'warning', label: 'Passport held longer than agreed', count: '2 reports' },
-          { type: 'warning', label: 'Unexpected placement fee', count: '1 report' }
-        ]
-      }
-    },
-    {
-      id: 3,
-      name: 'Noor Al Hayat Agency',
-      location: 'Addis Ababa',
-      destination: 'Qatar',
-      status: 'active',
-      icon: 'verified',
-      color: 'emerald',
-      license: 'active',
-      flag: '1 delayed document pattern',
-      stats: {
-        years: '1.8',
-        records: '25',
-        concern: 'Medium',
-        patterns: [
-          { type: 'warning', label: 'Delayed document return', count: '1 report' }
-        ]
-      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [query]);
+
+  const handleQueryChange = (value) => {
+    setQuery(value);
+    if (!value.trim()) setAgencies([]);
+  };
+
+  const openAgency = async (a) => {
+    setActiveAgency(a);
+    setNotice('');
+    try {
+      const detail = await agencyApi.get(a.id);
+      setActiveAgency(toView(detail, detail.report_flags));
+    } catch (err) {
+      setNotice(err.message);
     }
-  ];
+  };
+
+  const saveAgency = async () => {
+    if (!isLoggedIn()) return setNotice('Sign in first to save agencies.');
+    try {
+      await agencyApi.addToShortlist(activeAgency.id);
+      setNotice('Saved to your shortlist.');
+    } catch (err) {
+      setNotice(err.status === 409 ? 'Already in your shortlist.' : err.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-sand-50 flex flex-col items-center font-sans text-stone-800">
@@ -137,7 +177,7 @@ export default function TrustRegistryPage() {
               <div className="relative mb-3 md:mb-4">
                 <div className="flex items-center bg-white rounded-2xl px-3.5 py-3 border border-stone-300/80 shadow-sm focus-within:ring-2 focus-within:ring-brand-700 focus-within:border-brand-700">
                   <span className="material-symbols-outlined text-stone-400 text-[20px] mr-2.5">search</span>
-                  <input className="w-full bg-transparent border-0 p-0 text-stone-900 placeholder-stone-400 font-medium text-sm focus:ring-0 outline-none" placeholder="Search agency name..." type="text" defaultValue="Al Noor"/>
+                  <input className="w-full bg-transparent border-0 p-0 text-stone-900 placeholder-stone-400 font-medium text-sm focus:ring-0 outline-none" placeholder="Search agency name, license or phone..." type="text" value={query} onChange={(e) => handleQueryChange(e.target.value)}/>
                   <button aria-label="Voice search" className="ml-2 w-8 h-8 rounded-full bg-sand-100 text-stone-600 flex items-center justify-center hover:bg-sand-200 transition-colors" type="button">
                     <span className="material-symbols-outlined text-[18px]">mic</span>
                   </button>
@@ -145,12 +185,14 @@ export default function TrustRegistryPage() {
               </div>
 
               <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-xs md:text-sm text-stone-600 font-medium">3 agencies found</span>
-                <button className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-700 bg-sand-100 px-3 py-1 rounded-full border border-sand-300 hover:bg-sand-200 transition">
-                  <span className="material-symbols-outlined text-[15px] text-stone-500">location_on</span>
-                  <span>Saudi Arabia</span>
-                </button>
+                <span className="text-xs md:text-sm text-stone-600 font-medium">
+                  {!query.trim() ? 'Type to search the registry' : searching ? 'Searching…' : `${agencies.length} ${agencies.length === 1 ? 'agency' : 'agencies'} found`}
+                </span>
               </div>
+
+              {error && (
+                <p role="alert" className="mb-3 text-xs md:text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3">{error}</p>
+              )}
 
               <div className="bg-brand-50 border border-brand-200/80 rounded-2xl p-3 mb-3.5 flex items-start gap-2.5 text-stone-700 text-xs md:text-[13px]">
                 <span className="material-symbols-outlined text-brand-700 text-[18px] shrink-0 mt-0.5">verified</span>
@@ -163,7 +205,7 @@ export default function TrustRegistryPage() {
                 {agencies.map(agency => (
                   <article 
                     key={agency.id}
-                    onClick={() => setActiveAgency(agency)}
+                    onClick={() => openAgency(agency)}
                     className={`bg-white rounded-2xl p-3.5 border shadow-sm cursor-pointer active:scale-[0.99] transition-all
                       ${activeAgency?.id === agency.id ? 'border-brand-500 ring-1 ring-brand-500' : 
                         agency.status === 'warning' ? 'border-amber-300 bg-amber-50/20' : 'border-stone-200/90 hover:border-brand-500/50'
@@ -178,7 +220,7 @@ export default function TrustRegistryPage() {
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-stone-900">{agency.name}</h3>
-                          <p className="text-[11px] text-stone-500 mt-0.5">{agency.location} • {agency.destination} placements</p>
+                          <p className="text-[11px] text-stone-500 mt-0.5">{agency.location}{agency.licenseNo ? ` • ${agency.licenseNo}` : ''}</p>
                         </div>
                       </div>
                       <span className="material-symbols-outlined text-stone-400 text-[18px] mt-1 hidden md:block">
@@ -256,7 +298,7 @@ export default function TrustRegistryPage() {
                     </div>
                     <div className="mt-0.5">
                       <h3 className="text-base md:text-xl font-bold text-stone-900 leading-snug">{activeAgency.name}</h3>
-                      <p className="text-xs md:text-sm text-stone-500 mt-0.5 md:mt-1">{activeAgency.location} • {activeAgency.destination} placements</p>
+                      <p className="text-xs md:text-sm text-stone-500 mt-0.5 md:mt-1">{activeAgency.location}{activeAgency.phone ? ` • ${activeAgency.phone}` : ''}</p>
                     </div>
                   </div>
                   
@@ -269,9 +311,15 @@ export default function TrustRegistryPage() {
                       `}>{activeAgency.status === 'warning' ? 'schedule' : 'account_balance'}</span>
                       <div>
                         <h4 className={`text-xs md:text-sm font-bold ${activeAgency.status === 'warning' ? 'text-amber-950' : 'text-emerald-950'}`}>
-                          {activeAgency.status === 'warning' ? 'License renewal pending' : 'Government license active'}
+                          {activeAgency.verification === 'verified'
+                            ? 'Government license verified'
+                            : activeAgency.verification === 'flagged'
+                              ? 'Flagged by the review council'
+                              : 'License not yet verified'}
                         </h4>
-                        <p className="text-[11px] md:text-xs text-stone-600 mt-0.5">MOLS Registration ET-RA-20481 • checked 24 Sep 2026</p>
+                        <p className="text-[11px] md:text-xs text-stone-600 mt-0.5">
+                          {activeAgency.licenseNo ? `License no. ${activeAgency.licenseNo}` : 'No license number on record'}
+                        </p>
                       </div>
                     </div>
                     {activeAgency.status !== 'warning' && (
@@ -284,8 +332,8 @@ export default function TrustRegistryPage() {
 
                 <div className="grid grid-cols-3 gap-2.5 md:gap-4 mb-4 md:mb-6">
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
-                    <div className="text-base md:text-xl font-bold text-stone-900">{activeAgency.stats.years} yrs</div>
-                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">in registry</div>
+                    <div className="text-base md:text-xl font-bold text-stone-900 capitalize">{activeAgency.verification}</div>
+                    <div className="text-[11px] md:text-xs text-stone-500 font-medium leading-tight mt-0.5 md:mt-1">registry status</div>
                   </div>
                   <div className="bg-sand-100 md:bg-white rounded-2xl p-3 md:p-4 text-left border border-sand-200 md:shadow-sm">
                     <div className="text-base md:text-xl font-bold text-stone-900">{activeAgency.stats.records}</div>
@@ -303,6 +351,9 @@ export default function TrustRegistryPage() {
                     <a className="text-xs md:text-sm font-semibold text-brand-700 underline decoration-brand-200 hover:text-brand-900" href="#">How this works</a>
                   </div>
                   <div className="space-y-2.5 md:space-y-3">
+                    {activeAgency.stats.records === 0 && (
+                      <p className="text-xs md:text-sm text-stone-500">No worker reports recorded for this agency.</p>
+                    )}
                     {activeAgency.stats.patterns.map((pattern, idx) => (
                       <div key={idx} className={`flex items-center justify-between p-2 md:p-3 rounded-xl border
                         ${pattern.type === 'warning' ? 'bg-amber-50/50 border-amber-200/60' : 'bg-sand-50 border-sand-200/60'}
@@ -332,15 +383,19 @@ export default function TrustRegistryPage() {
                   </p>
                 </div>
 
+                {notice && (
+                  <p role="status" className="mb-3 text-xs md:text-sm text-stone-700 bg-sand-100 border border-sand-300 rounded-xl p-3">{notice}</p>
+                )}
+
                 <div className="grid grid-cols-5 gap-2.5 md:gap-4 mb-2">
-                  <button className="col-span-2 flex items-center justify-center gap-1.5 py-3 md:py-4 px-2 bg-white hover:bg-sand-100 text-stone-800 text-xs md:text-sm font-bold rounded-2xl border border-stone-300 shadow-sm transition active:scale-[0.98]">
+                  <button onClick={saveAgency} className="col-span-2 flex items-center justify-center gap-1.5 py-3 md:py-4 px-2 bg-white hover:bg-sand-100 text-stone-800 text-xs md:text-sm font-bold rounded-2xl border border-stone-300 shadow-sm transition active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[20px]">bookmark</span>
                     <span>Save agency</span>
                   </button>
-                  <button className="col-span-3 flex items-center justify-center gap-1.5 py-3 md:py-4 px-3 bg-brand-800 hover:bg-brand-900 text-white text-xs md:text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98]">
+                  <Link href="/records" className="col-span-3 flex items-center justify-center gap-1.5 py-3 md:py-4 px-3 bg-brand-800 hover:bg-brand-900 text-white text-xs md:text-sm font-bold rounded-2xl shadow-sm transition active:scale-[0.98]">
                     <span className="material-symbols-outlined text-[18px] md:text-[20px]">document_scanner</span>
                     <span>Check a contract</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}

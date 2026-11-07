@@ -1,9 +1,124 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { workers, agency as agencyApi } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useAuth';
+
+const FLAG_LABELS = {
+  missing_wage: 'No wage amount',
+  missing_rest_day_clause: 'No weekly rest day mentioned',
+  missing_termination_clause: 'No termination terms mentioned',
+};
 
 export default function RecordsPage() {
+  const router = useRouter();
+  const ready = useRequireAuth();
   const [selectedOption, setSelectedOption] = useState('camera');
+  const [form, setForm] = useState({ wage: '', hours: '', start_date: '', terms: '', agencyName: '' });
+  const [agencyMatches, setAgencyMatches] = useState([]);
+  const [agencyId, setAgencyId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [flags, setFlags] = useState(null);
+  const [pages, setPages] = useState([]); // [{ file, url }]
+  const [savedId, setSavedId] = useState(null);
+  const cameraInput = useRef(null);
+  const fileInput = useRef(null);
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+
+  // Free thumbnail object URLs when leaving the page
+  useEffect(() => () => pagesRef.current.forEach((pg) => URL.revokeObjectURL(pg.url)), []);
+
+  const MAX_BYTES = 10 * 1024 * 1024;
+  const addFiles = (fileList) => {
+    const accepted = [];
+    for (const file of fileList) {
+      if (!/^image\/|^application\/pdf$/.test(file.type)) {
+        setError(`"${file.name}" is not a photo or PDF.`);
+        continue;
+      }
+      if (file.size > MAX_BYTES) {
+        setError(`"${file.name}" is larger than 10 MB.`);
+        continue;
+      }
+      accepted.push({ file, url: URL.createObjectURL(file) });
+    }
+    if (accepted.length) setPages((prev) => [...prev, ...accepted]);
+  };
+
+  const removePage = (idx) => {
+    setPages((prev) => {
+      URL.revokeObjectURL(prev[idx].url);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+
+  const searchAgency = async (name) => {
+    setForm((f) => ({ ...f, agencyName: name }));
+    setAgencyId(null);
+    if (name.trim().length < 2) return setAgencyMatches([]);
+    try {
+      setAgencyMatches(await agencyApi.search(name.trim(), { limit: 5 }));
+    } catch {
+      setAgencyMatches([]);
+    }
+  };
+
+  const pickAgency = (a) => {
+    setAgencyId(a.id);
+    setForm((f) => ({ ...f, agencyName: a.name }));
+    setAgencyMatches([]);
+  };
+
+  const saveContract = async () => {
+    setError('');
+    if (!form.wage || !form.start_date || !form.terms.trim()) {
+      return setError('Please fill in the monthly wage, start date and the contract terms.');
+    }
+    setSaving(true);
+    try {
+      // 1. Save the terms (once — a retry after a failed upload reuses the same contract)
+      let contractId = savedId;
+      let resultFlags = flags || [];
+      if (!contractId) {
+        const res = await workers.addContract({
+          wage: Number(form.wage),
+          hours: form.hours ? Number(form.hours) : null,
+          terms: form.terms.trim(),
+          start_date: new Date(form.start_date).toISOString(),
+          agency_id: agencyId,
+        });
+        contractId = res.contract.id;
+        resultFlags = res.flags;
+        setSavedId(contractId);
+      }
+      // 2. Attach the photos / PDFs
+      if (pages.length) {
+        try {
+          await workers.uploadDocuments(contractId, pages.map((pg) => pg.file));
+          pages.forEach((pg) => URL.revokeObjectURL(pg.url));
+          setPages([]);
+        } catch (err) {
+          setFlags(resultFlags);
+          return setError(`Your terms were saved, but the pages did not upload: ${err.message} Tap Save again to retry.`);
+        }
+      }
+      if (resultFlags.length) setFlags(resultFlags);
+      else router.push('/review');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!ready) return null;
 
   return (
     <div className="min-h-screen bg-[#F9F8F3] flex flex-col items-center font-sans text-slate-800">
@@ -105,7 +220,7 @@ export default function RecordsPage() {
                       </div>
                       <div>
                         <h3 className="text-[13px] md:text-base font-semibold text-slate-900 leading-tight">Take photos</h3>
-                        <p className="text-[11px] md:text-sm text-slate-600 mt-0.5 md:mt-1 leading-snug">Capture every page. We'll check if one is missing.</p>
+                        <p className="text-[11px] md:text-sm text-slate-600 mt-0.5 md:mt-1 leading-snug">Capture every page. We&apos;ll check if one is missing.</p>
                       </div>
                     </div>
                     {selectedOption === 'camera' ? (
@@ -188,77 +303,110 @@ export default function RecordsPage() {
                 </section>
               </div>
 
-              {/* Right Column (Desktop) / Viewfinder Section (Mobile) */}
-              <div className="md:w-1/2 flex flex-col md:pl-4">
-                
-                {selectedOption === 'camera' && (
-                  <section className="relative w-full rounded-2xl md:rounded-3xl bg-[#143B35] p-3 md:p-6 shadow-sm mb-3 overflow-hidden text-white flex flex-col justify-between min-h-[175px] md:min-h-[400px] flex-1">
-                    <div className="flex items-center justify-between w-full z-10">
-                      <div className="flex items-center space-x-1 md:space-x-1.5 px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-white/20 backdrop-blur-md text-[11px] md:text-sm font-medium text-white shadow-inner">
+              {/* Right Column (Desktop) / Capture + Terms (Mobile) */}
+              <div className="md:w-1/2 flex flex-col md:pl-4 gap-3">
+
+                {/* Hidden native pickers: the camera one opens the rear camera on phones */}
+                <input ref={cameraInput} type="file" accept="image/*" capture="environment" multiple className="hidden"
+                  onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+                <input ref={fileInput} type="file" accept="image/*,application/pdf" multiple className="hidden"
+                  onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+
+                {selectedOption !== 'voice' && (
+                  <section className={`w-full rounded-2xl md:rounded-3xl p-3 md:p-5 shadow-sm ${selectedOption === 'camera' ? 'bg-[#143B35] text-white' : 'bg-[#F4F3ED] border-2 border-dashed border-slate-300 text-slate-700'}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] md:text-sm font-medium ${selectedOption === 'camera' ? 'bg-white/20' : 'bg-white'}`}>
                         <span className="material-symbols-outlined text-[14px] md:text-[18px]">content_copy</span>
-                        <span>Page 1 of 3</span>
+                        <span>{pages.length ? `${pages.length} page${pages.length === 1 ? '' : 's'} added` : 'No pages yet'}</span>
                       </div>
-                      <div className="flex items-center space-x-1 md:space-x-1.5 px-2.5 md:px-4 py-1 md:py-2 rounded-full bg-white/20 backdrop-blur-md text-[11px] md:text-sm font-medium text-white shadow-inner">
+                      <div className={`flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] md:text-sm font-medium ${selectedOption === 'camera' ? 'bg-white/20' : 'bg-white'}`}>
                         <span className="material-symbols-outlined text-[14px] md:text-[18px]">lock</span>
-                        <span>Private capture</span>
+                        <span>Private</span>
                       </div>
                     </div>
 
-                    <div className="my-2 md:my-0 flex-1 flex flex-col items-center justify-center relative">
-                      <div className="w-36 md:w-64 h-28 md:h-48 bg-[#181C1D] rounded-sm md:rounded-md flex items-center justify-center p-1.5 md:p-2.5 shadow-md relative overflow-hidden">
-                        <div className="w-24 md:w-40 h-full bg-[#EDEDED] shadow-sm flex flex-col p-1.5 md:p-3 space-y-1 md:space-y-2 overflow-hidden opacity-95">
-                          <div className="h-1 md:h-2 bg-slate-400 w-3/4 self-center mb-1 md:mb-2 rounded"></div>
-                          <div className="space-y-0.5 md:space-y-1.5">
-                            <div className="h-0.5 md:h-1 bg-slate-300 w-full rounded"></div>
-                            <div className="h-0.5 md:h-1 bg-slate-300 w-11/12 rounded"></div>
-                            <div className="h-0.5 md:h-1 bg-slate-300 w-full rounded"></div>
-                            <div className="h-0.5 md:h-1 bg-slate-300 w-5/6 rounded"></div>
-                            <div className="h-0.5 md:h-1 bg-slate-300 w-4/5 rounded"></div>
-                          </div>
-                          <div className="mt-auto pt-1 md:pt-2 flex justify-between border-t border-slate-300 text-[3px] md:text-[6px] text-slate-500 font-bold uppercase">
-                            <span>Contract</span>
-                            <span>Sign</span>
-                          </div>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                      {pages.map((pg, idx) => (
+                        <div key={pg.url} className="relative aspect-[3/4] rounded-lg overflow-hidden bg-white/90 border border-slate-200">
+                          {pg.file.type === 'application/pdf' ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 p-1 text-center">
+                              <span className="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+                              <span className="text-[10px] truncate w-full">{pg.file.name}</span>
+                            </div>
+                          ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={pg.url} alt={`Page ${idx + 1}`} className="w-full h-full object-cover" />
+                          )}
+                          <span className="absolute bottom-1 left-1 text-[10px] font-semibold bg-black/60 text-white px-1.5 rounded">{idx + 1}</span>
+                          <button type="button" onClick={() => removePage(idx)} aria-label={`Remove page ${idx + 1}`}
+                            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[14px]">close</span>
+                          </button>
                         </div>
-                        {/* Scanning animation line */}
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-400/50 shadow-[0_0_8px_2px_rgba(52,211,153,0.3)] animate-[scan_2s_ease-in-out_infinite]"></div>
-                      </div>
+                      ))}
+                      <button type="button"
+                        onClick={() => (selectedOption === 'camera' ? cameraInput : fileInput).current?.click()}
+                        className={`aspect-[3/4] rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 text-[11px] md:text-xs font-medium ${selectedOption === 'camera' ? 'border-white/40 text-white hover:bg-white/10' : 'border-slate-300 text-slate-600 hover:bg-white'}`}>
+                        <span className="material-symbols-outlined text-[24px]">{selectedOption === 'camera' ? 'photo_camera' : 'upload_file'}</span>
+                        <span>{selectedOption === 'camera' ? (pages.length ? 'Next page' : 'Take photo') : 'Add file'}</span>
+                      </button>
                     </div>
-
-                    <div className="text-center z-10 mt-auto md:mt-4">
-                      <p className="text-[11px] md:text-base font-medium text-white tracking-wide">Keep all four corners inside the frame</p>
-                      <p className="text-[10px] md:text-sm text-emerald-200/90 mt-0.5 md:mt-1 font-normal">Good light • text is clear</p>
-                    </div>
+                    <p className={`text-[11px] md:text-sm mt-3 ${selectedOption === 'camera' ? 'text-emerald-200/90' : 'text-slate-500'}`}>
+                      {selectedOption === 'camera' ? 'Keep all four corners in the frame, in good light.' : 'Photos or PDF, up to 10 MB each.'}
+                    </p>
                   </section>
                 )}
 
-                {selectedOption === 'voice' && (
-                  <section className="relative w-full rounded-2xl md:rounded-3xl bg-[#143B35] p-3 md:p-6 shadow-sm mb-3 overflow-hidden text-white flex flex-col justify-center items-center min-h-[175px] md:min-h-[400px] flex-1">
-                    <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-[#dca14c]/30 flex items-center justify-center p-1.5 md:p-2 mb-4 md:mb-6 animate-pulse">
-                      <div className="w-full h-full rounded-full bg-[#C26D28] flex items-center justify-center shadow-inner">
-                        <span className="material-symbols-outlined text-[24px] md:text-[40px] text-white">mic</span>
-                      </div>
+                <section className="w-full rounded-2xl md:rounded-3xl bg-white border border-slate-200 p-4 md:p-6 shadow-sm flex flex-col gap-3 flex-1">
+                  <h3 className="text-sm md:text-xl font-semibold text-slate-900">What was promised</h3>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <label className="text-xs md:text-sm text-slate-600">
+                      Monthly wage
+                      <input type="number" min="0" inputMode="decimal" value={form.wage} onChange={update('wage')} placeholder="1200" className="mt-1 w-full rounded-xl border-slate-200 text-sm" />
+                    </label>
+                    <label className="text-xs md:text-sm text-slate-600">
+                      Hours per day
+                      <input type="number" min="0" max="24" value={form.hours} onChange={update('hours')} placeholder="8" className="mt-1 w-full rounded-xl border-slate-200 text-sm" />
+                    </label>
+                    <label className="text-xs md:text-sm text-slate-600">
+                      Start date
+                      <input type="date" value={form.start_date} onChange={update('start_date')} className="mt-1 w-full rounded-xl border-slate-200 text-sm" />
+                    </label>
+                    <div className="text-xs md:text-sm text-slate-600 relative">
+                      <label htmlFor="agency-search">Agency (optional)</label>
+                      <input id="agency-search" value={form.agencyName} onChange={(e) => searchAgency(e.target.value)} placeholder="Search name" className="mt-1 w-full rounded-xl border-slate-200 text-sm" />
+                      {agencyMatches.length > 0 && !agencyId && (
+                        <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-md overflow-hidden">
+                          {agencyMatches.map((a) => (
+                            <li key={a.id}>
+                              <button type="button" onClick={() => pickAgency(a)} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50">{a.name}</button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    <h3 className="text-sm md:text-xl font-medium text-white">Listening for terms...</h3>
-                    <p className="text-xs md:text-sm text-emerald-200/80 mt-1 md:mt-2 text-center max-w-xs">Say the promised salary, role, and working hours.</p>
-                  </section>
-                )}
-
-                {selectedOption === 'upload' && (
-                  <section className="relative w-full rounded-2xl md:rounded-3xl bg-[#F4F3ED] border-2 border-dashed border-slate-300 p-3 md:p-6 shadow-sm mb-3 overflow-hidden text-slate-600 flex flex-col justify-center items-center min-h-[175px] md:min-h-[400px] flex-1">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white flex items-center justify-center shadow-sm mb-4">
-                      <span className="material-symbols-outlined text-[28px] md:text-[36px] text-slate-400">upload_file</span>
+                  </div>
+                  <label className="text-xs md:text-sm text-slate-600 flex-1 flex flex-col">
+                    Contract terms
+                    <textarea value={form.terms} onChange={update('terms')} rows={selectedOption === 'voice' ? 5 : 3} placeholder="Role, rest day, termination, who keeps the passport…" className="mt-1 w-full flex-1 rounded-xl border-slate-200 text-sm" />
+                  </label>
+                  {error && <p role="alert" className="text-xs md:text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3">{error}</p>}
+                  {flags && !error && (
+                    <div role="status" className="text-xs md:text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1">
+                      <p className="font-semibold">Saved. Please check these points with the agency:</p>
+                      <ul className="list-disc pl-5">
+                        {flags.map((f) => <li key={f}>{FLAG_LABELS[f] || f}</li>)}
+                      </ul>
+                      <Link href="/review" className="inline-block font-semibold underline mt-1">Go to my record</Link>
                     </div>
-                    <h3 className="text-sm md:text-xl font-semibold text-slate-800">Select Document</h3>
-                    <p className="text-xs md:text-sm text-slate-500 mt-1 md:mt-2 text-center">Tap to browse PDFs or images.</p>
-                  </section>
-                )}
+                  )}
+                </section>
 
-                <section className="mt-1 md:mt-4">
-                  <Link href="/review" className="w-full bg-[#143B35] active:bg-[#0E2A26] hover:bg-[#0E2A26] text-white font-medium text-sm md:text-lg py-3.5 md:py-5 px-4 rounded-xl md:rounded-2xl flex items-center justify-center space-x-2 md:space-x-3 shadow-sm transition active:scale-[0.98]">
-                    <span className="material-symbols-outlined text-[20px] md:text-[24px]">{selectedOption === 'camera' ? 'camera_alt' : selectedOption === 'voice' ? 'graphic_eq' : 'file_upload'}</span>
-                    <span>{selectedOption === 'camera' ? 'Capture page' : selectedOption === 'voice' ? 'Start recording' : 'Browse files'}</span>
-                  </Link>
+                <section>
+                  <button type="button" onClick={saveContract} disabled={saving || (savedId && !pages.length && !!flags)} className="w-full bg-[#143B35] hover:bg-[#0E2A26] disabled:opacity-60 text-white font-medium text-sm md:text-lg py-3.5 md:py-5 px-4 rounded-xl md:rounded-2xl flex items-center justify-center space-x-2 md:space-x-3 shadow-sm transition active:scale-[0.98]">
+                    <span className="material-symbols-outlined text-[20px] md:text-[24px]">save</span>
+                    <span>{saving ? 'Saving…' : pages.length ? `Save contract + ${pages.length} page${pages.length === 1 ? '' : 's'}` : 'Save contract'}</span>
+                  </button>
                 </section>
               </div>
 

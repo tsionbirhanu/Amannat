@@ -10,3 +10,4 @@ python-dotenv
 httpx
 pytest
 boto3
+python-multipart
