@@ -1,8 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { quickExit } from '@/components/AppShell';
+import { Button, Icon, Notice, inputClass } from '@/components/ui';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,6 +16,18 @@ export default function RegisterPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  // Set when the number isn't linked to the Telegram bot yet: { message, botUrl }
+  const [telegramLink, setTelegramLink] = useState(null);
+  // { enabled, bot_url } from the backend: are codes delivered through Telegram?
+  const [telegram, setTelegram] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    auth.telegramInfo().then((t) => !cancelled && setTelegram(t)).catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleContinue = () => {
     // The selected language is already saved by LanguageContext (amannat_lang)
@@ -22,16 +36,25 @@ export default function RegisterPage() {
   };
 
   const handleRequestOtp = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!phone.trim()) return setError('Please enter your phone number.');
     setBusy(true);
     setError('');
     try {
-      await auth.requestOtp(phone.trim());
-      setInfo('We sent a 6-digit code to your phone.');
+      const res = await auth.requestOtp(phone.trim());
+      setTelegramLink(null);
+      setInfo(
+        res.channel === 'telegram'
+          ? 'We sent a 6-digit code to your Telegram. Open the Amannat bot to see it.'
+          : 'Development mode: the 6-digit code is printed in the backend terminal.'
+      );
       setStep('code');
     } catch (err) {
-      setError(err.message);
+      if (err.detail?.code === 'telegram_not_linked') {
+        setTelegramLink({ message: err.detail.message, botUrl: err.detail.bot_url });
+      } else {
+        setError(err.message);
+      }
     } finally {
       setBusy(false);
     }
@@ -101,169 +124,103 @@ export default function RegisterPage() {
   const t = translations[selectedLang] || translations['English'];
   const isRtl = languages.find(l => l.name === selectedLang)?.rtl || false;
 
+
+  const stepIndex = { lang: 0, phone: 1, code: 2 }[step];
+  const stepTitles = [t.chooseLanguage, 'Your phone number', 'Enter your code'];
+
   return (
-    <div className="h-screen flex items-center justify-center bg-[#fbfbf9] font-sans overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
-      <main className="w-full h-full text-gray-900 relative flex flex-col md:flex-row overflow-hidden">
-        
-        {/* Left/Top Section Container (Green Background) */}
-        <div className="bg-[#143e35] text-white pt-3 pb-8 px-6 md:px-16 lg:px-24 relative rounded-b-[28px] md:rounded-none md:w-1/2 lg:w-[45%] flex flex-col shrink-0">
-          
-          {/* iOS StatusBar (Hide on Desktop) */}
-          <div className="md:hidden flex justify-between items-center text-white text-xs font-semibold tracking-tight pt-1 pb-3 px-1">
-            <span className="text-[14px] font-medium tracking-tight">9:41</span>
-            <div className="flex items-center space-x-1.5">
-              <svg className="w-4 h-3.5" fill="currentColor" viewBox="0 0 18 14">
-                <path d="M1 10.5C1 10.2239 1.22386 10 1.5 10H3.5C3.77614 10 4 10.2239 4 10.5V13.5C4 13.7761 3.77614 14 3.5 14H1.5C1.22386 14 1 13.7761 1 13.5V10.5Z"></path>
-                <path d="M5.5 8C5.5 7.72386 5.72386 7.5 6 7.5H8C8.27614 7.5 8.5 7.72386 8.5 8V13.5C8.5 13.7761 8.27614 14 8 14H6C5.72386 14 5.5 13.7761 5.5 13.5V8Z"></path>
-                <path d="M10 5C10 4.72386 10.2239 4.5 10.5 4.5H12.5C12.7761 4.5 13 4.72386 13 5V13.5C13 13.7761 12.7761 14 12.5 14H10.5C10.2239 14 10 13.7761 10 13.5V5Z"></path>
-                <path d="M14.5 1.5C14.5 1.22386 14.7239 1 15 1H17C17.2761 1 17.5 1.22386 17.5 1.5V13.5C17.5 13.7761 17.2761 14 17 14H15C14.7239 14 14.5 13.7761 14.5 13.5V1.5Z"></path>
-              </svg>
-              <svg className="w-4 h-3.5" fill="currentColor" viewBox="0 0 18 14">
-                <path clipRule="evenodd" d="M9 3C5.53 3 2.42 4.49.26 6.88L9 16.5l8.74-9.62C15.58 4.49 12.47 3 9 3z" fillRule="evenodd"></path>
-              </svg>
-              <div className="flex items-center">
-                <div className="w-5 h-2.5 border border-white rounded-[3px] p-[1px] flex items-center">
-                  <div className="h-full w-3.5 bg-white rounded-[1.5px]"></div>
-                </div>
-                <div className="w-0.5 h-1 bg-white rounded-r-sm -ml-[0.5px]"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Header Actions */}
-          <div className="flex justify-between items-center mt-2.5 md:mt-8 mb-5 md:mb-0">
-            <div className="inline-flex items-center gap-1.5 bg-[#204a40]/90 text-white/95 px-3 py-1.5 rounded-full text-xs font-normal border border-emerald-600/30">
-              <svg className="w-3.5 h-3.5 text-white/90" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <line strokeLinecap="round" x1="2" x2="22" y1="2" y2="22"></line>
-                <path d="M8.5 8.5A6 6 0 0 1 12 7.5c1.7 0 3.2.7 4.2 1.8" strokeLinecap="round"></path>
-                <path d="M5 5a10 10 0 0 1 14 0" strokeLinecap="round"></path>
-                <line strokeLinecap="round" strokeWidth="3" x1="12" x2="12.01" y1="20" y2="20"></line>
-              </svg>
-              <span className="tracking-tight text-[11px] md:text-xs font-medium">{t.worksOffline}</span>
-            </div>
-            <button aria-label="Exit" className="inline-flex items-center gap-1.5 bg-[#204a40]/90 hover:bg-[#27594d] text-white/90 px-3.5 py-1.5 rounded-full text-xs font-medium border border-emerald-600/30 active:scale-95 transition" type="button">
-              <svg className="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-              <span className="text-[11px] md:text-xs">{t.exit}</span>
-            </button>
-          </div>
-
-          {/* Hero Identity - Centered Vertically on Desktop */}
-          <div className="mt-4 md:mt-auto md:mb-auto md:-translate-y-12">
-            <div className="w-12 h-12 md:w-20 md:h-20 rounded-full bg-[#de9b43] flex items-center justify-center shadow-md mb-4 md:mb-8">
-              <svg className="w-6 h-6 md:w-10 md:h-10 text-[#143e35]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </div>
-            <h1 className="text-3xl md:text-6xl font-normal tracking-tight text-white mb-2 md:mb-4">Amannat</h1>
-            <p className="text-[15px] md:text-xl md:leading-relaxed text-white/80 mt-2 font-light max-w-[310px] md:max-w-md">
-              {t.tagline}
-            </p>
-          </div>
+    <div className="min-h-[100dvh] bg-sand-50 flex flex-col md:flex-row" dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Brand panel */}
+      <aside className="bg-brand-800 text-white px-6 pt-6 pb-8 md:w-[42%] md:p-12 flex flex-col">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2.5">
+            <span className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+              <Icon name="verified_user" filled className="text-[22px] text-accent-400" />
+            </span>
+            <span className="text-xl font-bold tracking-tight">Amannat</span>
+          </span>
+          <button
+            type="button"
+            onClick={quickExit}
+            title="Leave immediately and open a neutral page"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-sm font-semibold bg-white/10 hover:bg-white/20"
+          >
+            <Icon name="logout" className="text-[18px]" />
+            {t.exit}
+          </button>
         </div>
+        <div className="mt-8 md:mt-auto md:mb-auto">
+          <h1 className="text-3xl md:text-5xl font-bold leading-tight">{t.tagline}</h1>
+        </div>
+      </aside>
 
-        {/* Right/Bottom Selection Area */}
-        <div className="px-5 md:px-12 lg:px-20 pt-5 md:pt-0 pb-3 md:pb-0 flex-1 flex flex-col justify-between md:justify-center md:items-center overflow-y-auto">
-          <div className="w-full md:max-w-lg md:mx-auto flex flex-col justify-center my-auto py-4">
-            {step === 'lang' && (
+      {/* Steps */}
+      <main className="flex-1 flex items-start md:items-center justify-center px-4 py-8 md:p-12">
+        <div className="w-full max-w-md">
+          <ol aria-label="Progress" className="flex items-center gap-2 mb-6">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className={`h-1.5 flex-1 rounded-full ${i <= stepIndex ? 'bg-brand-600' : 'bg-sand-200'}`}>
+                <span className="sr-only">Step {i + 1}{i === stepIndex ? ' (current)' : ''}</span>
+              </li>
+            ))}
+          </ol>
+
+          <h2 className="text-2xl font-bold text-stone-900">{stepTitles[stepIndex]}</h2>
+
+          {step === 'lang' && (
             <>
-            <div className="mb-4 md:mb-6">
-              <h2 className="text-[20px] md:text-2xl font-semibold tracking-tight text-gray-900 md:mb-1">{t.chooseLanguage}</h2>
-              <p className="text-[12.5px] md:text-sm leading-relaxed text-gray-500 mt-0.5">
-                {t.languageDesc}
-              </p>
-            </div>
-            
-            {/* Language Radio List */}
-            <fieldset className="space-y-2.5 md:space-y-3">
-              <legend className="sr-only">Available Languages</legend>
-              {languages.map((lang) => {
-                const isSelected = selectedLang === lang.name;
-                return (
-                  <label 
-                    key={lang.id}
-                    onClick={() => setSelectedLang(lang.name)}
-                    className={`flex items-center justify-between p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl cursor-pointer active:scale-[0.985] transition ${
-                      isSelected 
-                        ? 'border-2 border-[#143e35] shadow-[0_1px_3px_rgba(20,62,53,0.08)]' 
-                        : 'border border-gray-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-gray-300'
-                    }`}>
-                    <div className="flex items-center space-x-3.5 md:space-x-4">
-                      {isSelected ? (
-                        <span className="w-5 h-5 md:w-5 md:h-5 rounded-full border-[2.2px] border-[#143e35] flex items-center justify-center shrink-0">
-                          <span className="w-2.5 h-2.5 md:w-2.5 md:h-2.5 rounded-full bg-[#143e35]"></span>
-                        </span>
-                      ) : (
-                        <span className="w-5 h-5 md:w-5 md:h-5 rounded-full border border-gray-300 flex items-center justify-center shrink-0"></span>
-                      )}
-                      <span className={`text-[15px] md:text-base ${isSelected ? 'font-medium text-gray-900' : 'font-normal text-gray-800'}`}>
-                        {lang.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2.5 md:space-x-4">
-                      {lang.rtl && <span className="text-[10px] md:text-xs tracking-wide text-gray-400 font-medium uppercase px-1">RTL</span>}
-                      <button aria-label={`Listen in ${lang.name}`} className="text-emerald-800/80 hover:text-emerald-950 p-1 md:p-2" type="button" onClick={(e) => e.stopPropagation()}>
-                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                          <path d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z" strokeLinecap="round" strokeLinejoin="round"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </label>
-                );
-              })}
-            </fieldset>
-
-            {/* Bottom Action Section */}
-            <div className="mt-4 md:mt-6 mb-2 md:mb-0 space-y-3.5 md:space-y-4">
-              {/* Privacy & Security Notice Callout */}
-              <aside aria-label="Privacy guarantee" className="flex items-center space-x-2.5 md:space-x-3 p-3 md:p-4 rounded-xl md:rounded-2xl bg-[#e3f3ec] border border-[#d2ecdf]">
-                <svg className="w-4 h-4 md:w-5 md:h-5 text-[#205244] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect height="11" rx="2" ry="2" width="18" x="3" y="11"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                <p className="text-[11.5px] md:text-[12.5px] leading-tight text-[#205244] font-normal">
-                  {t.privacyNotice}
-                </p>
-              </aside>
-              
-              {/* Continue CTA Button */}
-              <button 
-                onClick={handleContinue}
-                className="w-full py-3.5 md:py-4 px-4 bg-[#143e35] hover:bg-[#0f322b] text-white rounded-xl md:rounded-2xl font-normal text-[15px] md:text-base flex items-center justify-center space-x-2.5 md:space-x-3 shadow-sm active:scale-[0.985] transition cursor-pointer" type="button">
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
-                <span>{t.continueIn} {selectedLang}</span>
-              </button>
-              
-            </div>
+              <fieldset className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <legend className="sr-only">{t.chooseLanguage}</legend>
+                {languages.map((lang) => {
+                  const selected = selectedLang === lang.name;
+                  return (
+                    <label
+                      key={lang.id}
+                      className={`flex items-center gap-3 h-14 px-4 rounded-xl border bg-white cursor-pointer transition-colors ${
+                        selected ? 'border-brand-600 ring-1 ring-brand-600 bg-brand-50' : 'border-sand-200 hover:border-stone-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="language"
+                        value={lang.name}
+                        checked={selected}
+                        onChange={() => setSelectedLang(lang.name)}
+                        className="w-5 h-5 text-brand-700 border-stone-400 focus:ring-brand-500"
+                      />
+                      <span className={`text-base ${selected ? 'font-semibold text-stone-900' : 'text-stone-800'}`}>{lang.name}</span>
+                    </label>
+                  );
+                })}
+              </fieldset>
+              <Button className="w-full mt-6" icon="arrow_forward" onClick={handleContinue}>
+                {t.continueIn} {selectedLang}
+              </Button>
             </>
-            )}
+          )}
 
-            {step !== 'lang' && (
-              <form onSubmit={step === 'phone' ? handleRequestOtp : handleVerify} className="space-y-4">
-                <div>
-                  <h2 className="text-[20px] md:text-2xl font-semibold tracking-tight text-gray-900 md:mb-1">
-                    {step === 'phone' ? 'Your phone number' : 'Enter your code'}
-                  </h2>
-                  <p className="text-[12.5px] md:text-sm leading-relaxed text-gray-500 mt-0.5">
-                    {step === 'phone'
-                      ? 'We send a one-time code by SMS. Your number is only used to sign in.'
-                      : info || `Enter the code sent to ${phone}.`}
-                  </p>
-                </div>
+          {step !== 'lang' && (
+            <form onSubmit={step === 'phone' ? handleRequestOtp : handleVerify} className="mt-2">
+              <p className="text-[15px] text-stone-600">
+                {step === 'phone'
+                  ? telegram?.enabled
+                    ? 'Your login code is sent free to your Telegram. Use the number your Telegram uses, with the country code.'
+                    : 'Enter your number with the country code. We send you a one-time code.'
+                  : info || `Enter the 6-digit code sent to ${phone}.`}
+              </p>
 
+              <div className="mt-5">
                 {step === 'phone' ? (
                   <input
                     type="tel"
                     inputMode="tel"
                     autoComplete="tel"
                     autoFocus
+                    aria-label="Phone number"
                     placeholder="+251 9xx xxx xxx"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-gray-200 text-[15px] md:text-base focus:border-[#143e35] focus:ring-[#143e35]"
+                    onChange={(e) => { setPhone(e.target.value); setTelegramLink(null); }}
+                    className={`${inputClass} h-14 text-lg`}
                   />
                 ) : (
                   <input
@@ -271,45 +228,59 @@ export default function RegisterPage() {
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     autoFocus
+                    aria-label="6-digit code"
                     maxLength={6}
-                    placeholder="6-digit code"
+                    placeholder="••••••"
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full p-3.5 md:p-4 bg-white rounded-xl md:rounded-2xl border border-gray-200 text-[15px] md:text-base tracking-[0.3em] focus:border-[#143e35] focus:ring-[#143e35]"
+                    className={`${inputClass} h-14 text-2xl tracking-[0.5em] text-center font-semibold`}
                   />
                 )}
-
-                {error && (
-                  <p role="alert" className="text-[12.5px] md:text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="w-full py-3.5 md:py-4 px-4 bg-[#143e35] hover:bg-[#0f322b] disabled:opacity-60 text-white rounded-xl md:rounded-2xl font-normal text-[15px] md:text-base shadow-sm active:scale-[0.985] transition cursor-pointer"
-                >
-                  {busy ? 'Please wait…' : step === 'phone' ? 'Send code' : 'Verify and continue'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setError(''); setStep(step === 'code' ? 'phone' : 'lang'); }}
-                  className="w-full text-[13px] md:text-sm text-gray-500 hover:text-gray-800"
-                >
-                  {step === 'code' ? 'Use a different number' : 'Back to language'}
-                </button>
-              </form>
-            )}
-
-            <div>
-              {/* Home Bar Indicator (Hide on Desktop) */}
-              <div aria-hidden="true" className="md:hidden w-full flex justify-center pt-1">
-                <div className="w-32 h-1 bg-neutral-300 rounded-full"></div>
               </div>
-            </div>
-          </div>
+
+              {step === 'phone' && telegram?.enabled && telegram.bot_url && !telegramLink && (
+                <p className="text-sm text-stone-500 mt-3">
+                  First time?{' '}
+                  <a href={telegram.bot_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-700 underline">
+                    Link your number in Telegram
+                  </a>
+                </p>
+              )}
+
+              {error && <Notice tone="error" className="mt-4">{error}</Notice>}
+
+              {step === 'phone' && telegramLink && (
+                <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-50 p-4">
+                  <p className="text-[15px] font-semibold text-stone-900">Link your number in Telegram</p>
+                  <ol className="list-decimal pl-5 mt-2 space-y-1 text-[15px] text-stone-700">
+                    <li>Open the Amannat bot and press <b>Start</b>.</li>
+                    <li>Tap <b>Share my phone number</b>.</li>
+                    <li>Come back and tap <b>Send code</b>.</li>
+                  </ol>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+                    {telegramLink.botUrl && (
+                      <Button href={telegramLink.botUrl} variant="secondary" icon="send">Open Telegram</Button>
+                    )}
+                    <Button onClick={() => handleRequestOtp()} disabled={busy}>{busy ? 'Checking…' : 'Send code'}</Button>
+                  </div>
+                </div>
+              )}
+
+              {!(step === 'phone' && telegramLink) && (
+                <Button type="submit" className="w-full mt-5" disabled={busy}>
+                  {busy ? 'Please wait…' : step === 'phone' ? 'Send code' : 'Verify and continue'}
+                </Button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => { setError(''); setTelegramLink(null); setStep(step === 'code' ? 'phone' : 'lang'); }}
+                className="w-full mt-3 h-11 text-[15px] font-semibold text-stone-600 hover:text-stone-900"
+              >
+                {step === 'code' ? 'Use a different number' : 'Back'}
+              </button>
+            </form>
+          )}
         </div>
       </main>
     </div>

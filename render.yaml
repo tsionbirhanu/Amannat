@@ -1,0 +1,43 @@
+# Render Blueprint: deploys the FastAPI backend from backend/.
+# Render dashboard → New → Blueprint → pick this repo. Values marked `sync: false`
+# are asked for once in the dashboard and never stored in git.
+services:
+  - type: web
+    name: amannat-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: frankfurt # closest Render region to Ethiopia and the Gulf
+    healthCheckPath: /health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/** # don't redeploy the API for frontend-only changes
+    envVars:
+      - key: APP_ENV
+        value: production
+      # Neon *pooled* connection string (host contains "-pooler")
+      - key: DATABASE_URL
+        sync: false
+      # Neon *direct* connection string, used only for migrations
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_MINUTES
+        value: "60"
+      # Your deployed frontend URL(s), comma-separated, e.g. https://amannat.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
+      # Telegram bot for free login codes (from @BotFather)
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      # Webhook mode: Telegram wakes the free instance when a message arrives.
+      # The webhook URL is derived from RENDER_EXTERNAL_URL automatically.
+      - key: TELEGRAM_MODE
+        value: webhook
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true

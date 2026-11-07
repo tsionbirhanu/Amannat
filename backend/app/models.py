@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import BigInteger, Column
 from sqlmodel import Field, SQLModel
 
 
@@ -25,6 +26,21 @@ class OtpCode(SQLModel, table=True):
     phone: str = Field(index=True)
     code: str
     expires_at: datetime
+    attempts: int = Field(default=0)  # wrong guesses against this code
+
+
+class TelegramLink(SQLModel, table=True):
+    """A phone number verified through the Telegram bot ("Share my phone number").
+
+    Telegram only lets a user share *their own* contact through the request-contact
+    button, and we additionally check contact.user_id == sender id, so a row here
+    proves the chat belongs to whoever owns that phone number.
+    """
+    phone: str = Field(primary_key=True)  # normalised: "+" followed by digits
+    # Telegram ids can exceed 32 bits, so store them as BIGINT
+    chat_id: int = Field(sa_column=Column(BigInteger, index=True, nullable=False))
+    telegram_user_id: int = Field(sa_column=Column(BigInteger, nullable=False))
+    linked_at: datetime = Field(default_factory=utc_now)
 
 
 class GuardianContact(SQLModel, table=True):

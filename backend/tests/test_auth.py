@@ -12,7 +12,7 @@ client = TestClient(app)
 def test_otp_request():
     response = client.post("/auth/otp/request", json={"phone": "+1234567890"})
     assert response.status_code == 200
-    assert response.json() == {"message": "OTP sent"}
+    assert response.json()["message"] == "OTP sent"
 
 def test_otp_verify_invalid_code():
     response = client.post("/auth/otp/verify", json={"phone": "+1234567890", "code": "000000"})

@@ -31,15 +31,18 @@ export const getLanguage = () => {
 };
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, detail = null) {
     super(message);
     this.status = status;
+    // Structured error details from the backend, e.g. { code, message, bot_url }
+    this.detail = detail;
   }
 }
 
 function errorMessage(data, fallback) {
   const detail = data?.detail;
   if (typeof detail === 'string') return detail;
+  if (detail && typeof detail === 'object' && !Array.isArray(detail) && detail.message) return detail.message;
   // FastAPI validation errors: [{ loc, msg, ... }]
   if (Array.isArray(detail)) return detail.map((d) => d.msg).join(', ');
   return fallback;
@@ -83,7 +86,8 @@ export async function api(path, { method = 'GET', body, query, auth = true, raw 
 
   if (!res.ok) {
     if (res.status === 401) clearToken();
-    throw new ApiError(errorMessage(data, res.statusText || 'Request failed'), res.status);
+    const detail = data?.detail && typeof data.detail === 'object' && !Array.isArray(data.detail) ? data.detail : null;
+    throw new ApiError(errorMessage(data, res.statusText || 'Request failed'), res.status, detail);
   }
   return data;
 }
@@ -99,6 +103,8 @@ export const auth = {
   },
   me: () => api('/auth/me'),
   logout: () => clearToken(),
+  // { enabled, bot_url }: whether login codes are delivered through the Telegram bot
+  telegramInfo: () => api('/telegram/info', { auth: false }),
 };
 
 export const voice = {

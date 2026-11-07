@@ -37,18 +37,69 @@ npm run dev
 - All API calls go through `frontend/src/lib/api.js`. The login token is kept in `localStorage`
   and sent as `Authorization: Bearer <token>`.
 
-## Signing in (development)
+## Signing in
 
-1. Open http://localhost:3000, choose a language, enter a phone number.
-2. The SMS gateway is still a stub, so the code is **printed in the backend terminal**:
-   `[SMS STUB] OTP for +251...: 123456`
-3. Enter that code. You are taken to `/home`.
+Login codes are delivered **free through a Telegram bot**. There is no paid SMS provider.
+
+- **Development without a bot:** leave `TELEGRAM_BOT_TOKEN` empty. The code is printed in the
+  backend terminal: `[SMS STUB] OTP for +251...: 123456`.
+- **With the bot (local or deployed):** the worker links their number once in Telegram, then every
+  code arrives there.
+
+### Set up the Telegram bot (5 minutes, free)
+
+1. In Telegram, open **@BotFather** → `/newbot` → pick a name (e.g. *Amannat*) and a username
+   ending in `bot` (e.g. `AmannatSafetyBot`). BotFather replies with a **token**.
+2. In `backend/.env`:
+   ```
+   TELEGRAM_BOT_TOKEN=123456789:AA...        # keep secret, never commit
+   TELEGRAM_BOT_USERNAME=AmannatSafetyBot
+   ```
+3. Restart uvicorn. The log shows `Telegram bot polling started`.
+4. Optional, in BotFather: `/setdescription`, `/setuserpic`, and `/setcommands` →
+   `start - Link my phone number` and `stop - Unlink`.
+
+How a worker signs in:
+1. In the app they enter their number (with country code) and tap **Send code**.
+2. The first time, the app shows **Open Telegram**. In the bot they press **Start** →
+   **📱 Share my phone number**. Telegram only lets people share *their own* verified number,
+   and the backend double-checks it.
+3. Back in the app: **I've linked it, send code** → the code arrives in the bot → enter it.
+
+Guardians who link their number in the same bot also receive **panic and missed check-in
+alerts** there, free.
+
+### Deploying
+
+Set these on the server (in its environment variables, not in git):
+
+| Variable | Value |
+|----------|-------|
+| `APP_ENV` | `production`: codes are never printed, and failed delivery shows an error |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` | from BotFather |
+| `TELEGRAM_MODE` | `polling` (default) works on any host. Use `webhook` if you run **more than one** backend process, or on hosts that sleep when idle |
+| `TELEGRAM_WEBHOOK_URL` | for webhook mode: `https://<your-api-domain>/telegram/webhook` |
+| `TELEGRAM_WEBHOOK_SECRET` | for webhook mode: a long random string (`python -c "import secrets; print(secrets.token_urlsafe(32))"`) |
+
+Run `alembic upgrade head` once against the production database (it adds the `telegramlink`
+table and the `otpcode.attempts` column).
+
+Built-in protection (adjust in `.env` if needed):
+
+| Setting | Default | |
+|---------|---------|---|
+| `OTP_TTL_MINUTES` | 5 | code lifetime |
+| `OTP_MAX_ATTEMPTS` | 5 | wrong guesses before the code is locked |
+| `OTP_REQUESTS_PER_MINUTE` / `_PER_HOUR` | 1 / 5 | codes per phone number |
+
+Codes are generated with `secrets` (cryptographically secure). Only the newest code for a number
+works, and all codes are deleted after a successful login.
 
 ## Page → API map
 
 | Page        | Endpoints |
 |-------------|-----------|
-| `/register` | `POST /auth/otp/request`, `POST /auth/otp/verify` |
+| `/register` | `POST /auth/otp/request`, `POST /auth/otp/verify`, `GET /telegram/info` |
 | `/home`     | `GET /auth/me`, `GET /safety/checkins`, check-in confirm |
 | `/assistant`| Voxide live voice agent (`src/lib/voxide.js`) calling the endpoints below as capabilities; falls back to `POST /voice/query` + browser speech |
 | `/trust`    | `GET /agency/search`, `GET /agency/agencies/{id}`, `POST /agency/shortlist` |

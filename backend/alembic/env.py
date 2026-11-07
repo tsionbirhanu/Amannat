@@ -21,7 +21,9 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..'
 from sqlmodel import SQLModel
 from app.config import DATABASE_URL
 
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+# Migrations may need Neon's *direct* (non-pooled) URL; fall back to the app's URL.
+# "%" must be doubled because alembic's config uses ConfigParser interpolation.
+config.set_main_option("sqlalchemy.url", (os.getenv("MIGRATION_DATABASE_URL") or DATABASE_URL).replace("%", "%%"))
 
 # add your model's MetaData object here
 # for 'autogenerate' support

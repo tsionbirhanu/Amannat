@@ -13,7 +13,9 @@ module.exports = {
           50: '#F0F7F4',
           100: '#DDEFE7',
           200: '#BDDFD0',
+          300: '#8FC7AE',
           500: '#2A6F55',
+          600: '#1F5A45',
           700: '#184736',
           800: '#143C2E',
           900: '#0E291F',
@@ -25,6 +27,22 @@ module.exports = {
           bgLight: '#F8FAFC',
           sidebar: '#FFFFFF',
           cardBg: '#FFFFFF',
+        },
+        // Amber: the main call to action (check-in, assistant)
+        accent: {
+          50: '#FDF6EC',
+          100: '#F9E7CC',
+          400: '#E6A957',
+          500: '#D9913D',
+          600: '#B8772B',
+          700: '#8F5A1E',
+        },
+        // Red: emergencies and destructive actions only
+        danger: {
+          50: '#FDF2F1',
+          100: '#F8DCDA',
+          600: '#B13B35',
+          700: '#932F2A',
         },
         sand: {
           50: '#F9F8F5',
@@ -107,7 +125,7 @@ module.exports = {
         "gutter-tablet": "1.5rem"
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', '"Noto Sans Ethiopic"', '"Noto Sans Arabic"', 'sans-serif'],
         "headline-sm": ["Plus Jakarta Sans"],
         "body-lg": ["Noto Sans"],
         "display": ["Plus Jakarta Sans"],
