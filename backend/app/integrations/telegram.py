@@ -151,10 +151,22 @@ _thread: Optional[threading.Thread] = None
 
 def _poll_loop() -> None:
     offset = None
+    # If a webhook is set, a deployed server owns this bot's incoming messages.
+    # Polling would require deleting that webhook and silently break production,
+    # so don't. Sending codes and alerts still works from here.
     try:
-        _call("deleteWebhook", {"drop_pending_updates": False})
+        info = _call("getWebhookInfo")
     except TelegramError as exc:
-        log.warning("Could not clear Telegram webhook: %s", exc)
+        log.warning("Could not read Telegram webhook info: %s", exc)
+        info = {}
+    if info.get("url"):
+        log.warning(
+            "Telegram bot already has a webhook (%s), so another server is handling its messages. "
+            "Not polling here. Codes and alerts are still sent. Use a separate bot token for local "
+            "development if you need the bot to respond locally.",
+            info["url"],
+        )
+        return
     while not _stop.is_set():
         try:
             updates = _call("getUpdates", {"offset": offset, "timeout": 25, "allowed_updates": ["message"]}, timeout=35)
@@ -162,6 +174,9 @@ def _poll_loop() -> None:
                 offset = update["update_id"] + 1
                 handle_update(update)
         except TelegramError as exc:
+            if "webhook is active" in str(exc).lower():
+                log.warning("A webhook was set for this bot by another server; stopping local polling.")
+                return
             log.warning("Telegram polling error: %s", exc)
             _stop.wait(5)
 

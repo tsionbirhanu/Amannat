@@ -235,3 +235,16 @@ def test_alert_to_unlinked_guardian_is_logged(bot, capsys):
 
 def test_info_endpoint(bot):
     assert client.get("/telegram/info").json() == {"enabled": True, "bot_url": "https://t.me/AmannatTestBot?start=link"}
+
+
+def test_polling_never_removes_a_production_webhook(monkeypatch):
+    calls = []
+
+    def fake_call(method, payload=None, timeout=15):
+        calls.append(method)
+        return {"url": "https://amannat.onrender.com/telegram/webhook"} if method == "getWebhookInfo" else []
+
+    monkeypatch.setattr(config, "TELEGRAM_BOT_TOKEN", "test-token")
+    monkeypatch.setattr(telegram, "_call", fake_call)
+    telegram._poll_loop()  # must return immediately
+    assert calls == ["getWebhookInfo"]
