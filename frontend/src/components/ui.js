@@ -5,14 +5,86 @@
 //   danger = red (emergencies only)
 //   sand   = warm neutral backgrounds
 import Link from 'next/link';
+import {
+  ArrowLeft, ArrowRight, AudioLines, BadgeCheck, Banknote, Bookmark, CalendarClock, Camera, Check,
+  ChevronRight, CircleAlert, CircleCheck, Clock, Cloud, CloudOff, Download, ExternalLink, EyeOff,
+  FileText, FileUp, Flag, Folder, Gavel, House, Image, Info, Lock, LogOut, Mic, MicOff, OctagonAlert,
+  Pencil, PencilLine, Phone, Plus, Save, Search, SearchX, Send, Shield, ShieldCheck, Siren, Sparkles,
+  Square, TriangleAlert, UserPlus, Volume2, X,
+} from 'lucide-react';
 
 const cx = (...classes) => classes.filter(Boolean).join(' ');
 
+// Icons are inline SVGs (lucide-react), bundled with the page. An icon *font* shows
+// its raw names ("arrow_forward") until the font downloads, which on slow mobile
+// connections can be never. Names stay the Material Symbols names used across the app.
+const ICONS = {
+  add: Plus,
+  arrow_back: ArrowLeft,
+  arrow_forward: ArrowRight,
+  auto_awesome: Sparkles,
+  bookmark: Bookmark,
+  call: Phone,
+  camera: Camera,
+  check: Check,
+  check_circle: CircleCheck,
+  chevron_right: ChevronRight,
+  close: X,
+  cloud_done: Cloud,
+  cloud_off: CloudOff,
+  description: FileText,
+  download: Download,
+  edit: Pencil,
+  edit_calendar: CalendarClock,
+  edit_note: PencilLine,
+  error: CircleAlert,
+  flag: Flag,
+  folder: Folder,
+  gavel: Gavel,
+  graphic_eq: AudioLines,
+  home: House,
+  image: Image,
+  info: Info,
+  lock: Lock,
+  logout: LogOut,
+  mic: Mic,
+  mic_off: MicOff,
+  open_in_new: ExternalLink,
+  payments: Banknote,
+  person_add: UserPlus,
+  photo_camera: Camera,
+  picture_as_pdf: FileText,
+  report: OctagonAlert,
+  save: Save,
+  schedule: Clock,
+  search: Search,
+  search_off: SearchX,
+  send: Send,
+  shield: Shield,
+  sos: Siren,
+  stop: Square,
+  upload_file: FileUp,
+  verified: BadgeCheck,
+  verified_user: ShieldCheck,
+  visibility_off: EyeOff,
+  volume_up: Volume2,
+  warning: TriangleAlert,
+};
+
+/**
+ * <Icon name="mic" className="text-[20px]" />: size follows the font size (1em),
+ * colour follows the text colour. `filled` draws a slightly bolder icon.
+ */
 export function Icon({ name, filled = false, className = '' }) {
+  const Svg = ICONS[name] || Info;
   return (
-    <span aria-hidden="true" className={cx('material-symbols-outlined leading-none select-none', filled && 'filled', className)}>
-      {name}
-    </span>
+    <Svg
+      aria-hidden="true"
+      focusable="false"
+      size="1em"
+      strokeWidth={filled ? 2.5 : 2}
+      className={cx('inline-block shrink-0', className)}
+    />
   );
 }
 
