@@ -5,6 +5,8 @@ __pycache__/
 .env
 .pytest_cache/
 .DS_Store
+*.db
+.vscode/
 
 # Uploaded contract documents (local dev storage)
 backend/uploads/

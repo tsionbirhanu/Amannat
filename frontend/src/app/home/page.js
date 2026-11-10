@@ -5,7 +5,7 @@ import { auth, safety, checkInNow } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useAuth';
 import { useLanguage } from '../../context/LanguageContext';
 import AppShell from '@/components/AppShell';
-import { Badge, Button, Icon, ListLink, SectionTitle } from '@/components/ui';
+import { Badge, Button, Icon, ListLink, SectionTitle, inputClass } from '@/components/ui';
 
 const parseUtc = (iso) => new Date(/[zZ]|[+-]\d\d:\d\d$/.test(iso) ? iso : `${iso}Z`);
 
@@ -60,7 +60,22 @@ export default function HomePage() {
       portableRecord: 'Your portable record',
       savedDocs: '3 documents • Last saved today, 8:16',
       exitDisguise: 'Exit Disguise',
-      exit: 'Exit'
+      exit: 'Exit',
+      adjustCheckinTitle: 'Adjust check-in time',
+      adjustCheckinDesc: 'Choose when you want your next safety check-in to be due.',
+      in1Hour: 'In 1 hour',
+      in2Hours: 'In 2 hours',
+      in4Hours: 'In 4 hours',
+      in8Hours: 'In 8 hours',
+      tomorrow24h: 'Tomorrow (+24h)',
+      customTimePrompt: 'Or pick a custom date and time:',
+      saveNewTime: 'Set time',
+      cancel: 'Cancel',
+      timeUpdated: 'Check-in time updated',
+      confirmSafetyPrompt: 'Are you safe right now?',
+      confirmSafetyDesc: 'Confirming your safety lets your guardians know you are doing well.',
+      yesImSafe: "Yes, I'm safe",
+      confirmLater: "I'll confirm later"
     },
     'Amharic': {
       home: 'መነሻ',
@@ -88,7 +103,22 @@ export default function HomePage() {
       portableRecord: 'ተንቀሳቃሽ መዝገብዎ',
       savedDocs: '3 ሰነዶች • ዛሬ 8፡16 ተቀምጧል',
       exitDisguise: 'መደበቂያን ውጣ',
-      exit: 'ውጣ'
+      exit: 'ውጣ',
+      adjustCheckinTitle: 'የማረጋገጫ ሰዓትን ያስተካክሉ',
+      adjustCheckinDesc: 'ቀጣዩ የደህንነት ማረጋገጫዎ መቼ እንዲሆን እንደሚፈልጉ ይምረጡ።',
+      in1Hour: 'በ1 ሰዓት ውስጥ',
+      in2Hours: 'በ2 ሰዓታት ውስጥ',
+      in4Hours: 'በ4 ሰዓታት ውስጥ',
+      in8Hours: 'በ8 ሰዓታት ውስጥ',
+      tomorrow24h: 'ነገ (+24 ሰዓት)',
+      customTimePrompt: 'ወይም የተለየ ቀን እና ሰዓት ይምረጡ:',
+      saveNewTime: 'ሰዓቱን አዘጋጅ',
+      cancel: 'ይቅር',
+      timeUpdated: 'የማረጋገጫ ሰዓቱ ተቀይሯል',
+      confirmSafetyPrompt: 'አሁን ደህና ነዎት?',
+      confirmSafetyDesc: 'አሁን ደህንነትዎን ማረጋገጥ ለአሳዳጊዎችዎ ደህና መሆንዎን ያሳውቃል።',
+      yesImSafe: 'አዎ፣ ደህና ነኝ',
+      confirmLater: 'በኋላ አረጋግጣለሁ'
     },
     'Afaan Oromo': {
       home: 'Gadaa',
@@ -116,7 +146,22 @@ export default function HomePage() {
       portableRecord: 'Galmee socho\'u kee',
       savedDocs: 'Sanadoota 3 • Har\'a 8:16 qusatame',
       exitDisguise: 'Dhoksaa keessaa bahi',
-      exit: 'Bahi'
+      exit: 'Bahi',
+      adjustCheckinTitle: 'Yeroo mirkaneeffannaa sirreessi',
+      adjustCheckinDesc: 'Mirkaneeffannaan nageenyaa itti aanu yoom akka ta\'u filadhu.',
+      in1Hour: 'Sa\'aatii 1 keessatti',
+      in2Hours: 'Sa\'aatii 2 keessatti',
+      in4Hours: 'Sa\'aatii 4 keessatti',
+      in8Hours: 'Sa\'aatii 8 keessatti',
+      tomorrow24h: 'Boru (+sa\'aatii 24)',
+      customTimePrompt: 'Yookiin guyyaa fi yeroo filadhu:',
+      saveNewTime: 'Yeroo galmeessi',
+      cancel: 'Dhiisi',
+      timeUpdated: 'Yeroon mirkaneeffannaa haaromeera',
+      confirmSafetyPrompt: 'Amma nagaadhaa?',
+      confirmSafetyDesc: 'Amma nageenya kee mirkaneessuun guddistoota keetti nagaa ta\'uu kee beeksisa.',
+      yesImSafe: 'Eeyyee, nagaadha',
+      confirmLater: 'Booda mirkaneessa'
     },
     'Arabic': {
       home: 'الرئيسية',
@@ -144,7 +189,22 @@ export default function HomePage() {
       portableRecord: 'سجلك المحمول',
       savedDocs: '3 مستندات • تم الحفظ اليوم، 8:16',
       exitDisguise: 'الخروج من التخفي',
-      exit: 'خروج'
+      exit: 'خروج',
+      adjustCheckinTitle: 'تعديل وقت تسجيل الدخول',
+      adjustCheckinDesc: 'اختر متى تريد أن يكون تسجيل التحقق من السلامة التالي.',
+      in1Hour: 'خلال ساعة واحدة',
+      in2Hours: 'خلال ساعتين',
+      in4Hours: 'خلال 4 ساعات',
+      in8Hours: 'خلال 8 ساعات',
+      tomorrow24h: 'غداً (+24 ساعة)',
+      customTimePrompt: 'أو حدد تاريخاً ووقتاً مخصصاً:',
+      saveNewTime: 'حفظ الوقت',
+      cancel: 'إلغاء',
+      timeUpdated: 'تم تحديث وقت التحقق',
+      confirmSafetyPrompt: 'هل أنت آمن الآن؟',
+      confirmSafetyDesc: 'تأكيد سلامتك يتيح للأوصياء معرفة أنك بخير.',
+      yesImSafe: 'نعم، أنا آمن',
+      confirmLater: 'سأؤكد لاحقاً'
     }
   };
 
@@ -155,6 +215,62 @@ export default function HomePage() {
   const [online, setOnline] = useState(null);
   const [checkingIn, setCheckingIn] = useState(false);
   const [notice, setNotice] = useState('');
+
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [modalStep, setModalStep] = useState('time'); // 'time' | 'safety'
+  const [customDateTime, setCustomDateTime] = useState('');
+  const [editedTimeDisplay, setEditedTimeDisplay] = useState('');
+  const [savingTime, setSavingTime] = useState(false);
+
+  const openChangeTimeModal = () => {
+    setModalStep('time');
+    const d = new Date(Date.now() + 2 * 3600 * 1000);
+    const offset = d.getTimezoneOffset() * 60000;
+    const localIso = new Date(d.getTime() - offset).toISOString().slice(0, 16);
+    setCustomDateTime(localIso);
+    setShowTimeModal(true);
+  };
+
+  const handleApplyTime = async (hoursOrDate) => {
+    setSavingTime(true);
+    let targetDate;
+    if (typeof hoursOrDate === 'number') {
+      targetDate = new Date(Date.now() + hoursOrDate * 3600 * 1000);
+    } else {
+      targetDate = new Date(hoursOrDate);
+    }
+
+    if (Number.isNaN(targetDate.getTime())) {
+      setSavingTime(false);
+      return;
+    }
+
+    try {
+      const list = await safety.setCustomTime(targetDate.toISOString());
+      setNextCheckin(nextPendingOf(list));
+    } catch {
+      setNextCheckin({ scheduled_at: targetDate.toISOString(), status: 'pending' });
+    } finally {
+      setSavingTime(false);
+      setEditedTimeDisplay(
+        targetDate.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+      );
+      setModalStep('safety');
+    }
+  };
+
+  const handleConfirmSafetyInModal = async () => {
+    await handleSafe();
+    setTimeout(() => {
+      setShowTimeModal(false);
+      setModalStep('time');
+    }, 700);
+  };
+
+  const handleDismissModal = () => {
+    setShowTimeModal(false);
+    setModalStep('time');
+  };
 
   useEffect(() => {
     if (!ready) return;
@@ -220,7 +336,12 @@ export default function HomePage() {
           <Button variant="accent" icon="check" onClick={handleSafe} disabled={checkingIn}>
             {checkingIn ? 'Saving…' : t.imSafe}
           </Button>
-          <Button href="/safety" icon="edit_calendar" className="bg-white/10 text-white hover:bg-white/20 border border-white/20">
+          <Button
+            type="button"
+            icon="edit_calendar"
+            onClick={openChangeTimeModal}
+            className="bg-white/10 text-white hover:bg-white/20 border border-white/20"
+          >
             {t.changeTime}
           </Button>
         </div>
@@ -251,6 +372,148 @@ export default function HomePage() {
         </span>
         <Icon name="chevron_right" className="text-[22px] text-stone-400 rtl:rotate-180" />
       </Link>
+
+      {/* Time Adjustment & Safety Confirmation Modal */}
+      {showTimeModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm"
+        >
+          <div className="bg-white rounded-3xl p-6 md:p-7 w-full max-w-md shadow-2xl border border-sand-200">
+            {modalStep === 'time' ? (
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 text-stone-900">
+                    <span className="w-9 h-9 rounded-full bg-brand-100 text-brand-800 flex items-center justify-center">
+                      <Icon name="schedule" className="text-[20px]" />
+                    </span>
+                    <h3 className="text-lg md:text-xl font-bold">{t.adjustCheckinTitle}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDismissModal}
+                    className="p-1.5 rounded-full text-stone-400 hover:text-stone-600 hover:bg-sand-100"
+                    aria-label="Close"
+                  >
+                    <Icon name="close" className="text-[20px]" />
+                  </button>
+                </div>
+
+                <p className="text-sm text-stone-600 mb-5">{t.adjustCheckinDesc}</p>
+
+                {/* Quick Presets */}
+                <div className="grid grid-cols-2 gap-2.5 mb-5">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTime(1)}
+                    disabled={savingTime}
+                    className="p-3 rounded-2xl border border-sand-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-colors font-medium text-stone-800 flex items-center justify-between"
+                  >
+                    <span>{t.in1Hour}</span>
+                    <span className="text-xs text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">+1h</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTime(2)}
+                    disabled={savingTime}
+                    className="p-3 rounded-2xl border border-sand-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-colors font-medium text-stone-800 flex items-center justify-between"
+                  >
+                    <span>{t.in2Hours}</span>
+                    <span className="text-xs text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">+2h</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTime(4)}
+                    disabled={savingTime}
+                    className="p-3 rounded-2xl border border-sand-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-colors font-medium text-stone-800 flex items-center justify-between"
+                  >
+                    <span>{t.in4Hours}</span>
+                    <span className="text-xs text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">+4h</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTime(8)}
+                    disabled={savingTime}
+                    className="p-3 rounded-2xl border border-sand-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-colors font-medium text-stone-800 flex items-center justify-between"
+                  >
+                    <span>{t.in8Hours}</span>
+                    <span className="text-xs text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">+8h</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTime(24)}
+                    disabled={savingTime}
+                    className="col-span-2 p-3 rounded-2xl border border-sand-200 hover:border-brand-500 hover:bg-brand-50/50 text-left transition-colors font-medium text-stone-800 flex items-center justify-between"
+                  >
+                    <span>{t.tomorrow24h}</span>
+                    <span className="text-xs text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full">+24h</span>
+                  </button>
+                </div>
+
+                {/* Custom Date & Time Picker */}
+                <div className="pt-3 border-t border-sand-200">
+                  <label htmlFor="custom-checkin-time" className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+                    {t.customTimePrompt}
+                  </label>
+                  <input
+                    id="custom-checkin-time"
+                    type="datetime-local"
+                    value={customDateTime}
+                    onChange={(e) => setCustomDateTime(e.target.value)}
+                    className={`${inputClass} mb-4`}
+                  />
+                  <div className="flex gap-2">
+                    <Button variant="ghost" onClick={handleDismissModal} className="flex-1">
+                      {t.cancel}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      icon="check"
+                      onClick={() => handleApplyTime(customDateTime)}
+                      disabled={savingTime || !customDateTime}
+                      className="flex-1"
+                    >
+                      {savingTime ? 'Saving…' : t.saveNewTime}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-2">
+                <div className="w-14 h-14 rounded-full bg-accent-100 text-stone-900 mx-auto flex items-center justify-center mb-4">
+                  <Icon name="check_circle" filled className="text-[32px] text-brand-800" />
+                </div>
+                <Badge tone="success" className="mb-3">
+                  {t.timeUpdated}: {editedTimeDisplay}
+                </Badge>
+                <h3 className="text-2xl font-bold text-stone-900 mb-2">{t.confirmSafetyPrompt}</h3>
+                <p className="text-[15px] text-stone-600 mb-6 max-w-xs mx-auto leading-relaxed">
+                  {t.confirmSafetyDesc}
+                </p>
+                <div className="flex flex-col gap-2.5">
+                  <Button
+                    variant="accent"
+                    icon="check"
+                    onClick={handleConfirmSafetyInModal}
+                    disabled={checkingIn}
+                    className="w-full h-12 text-base font-bold"
+                  >
+                    {checkingIn ? 'Saving…' : t.yesImSafe}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={handleDismissModal}
+                    className="w-full text-stone-600 hover:text-stone-900"
+                  >
+                    {t.confirmLater}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

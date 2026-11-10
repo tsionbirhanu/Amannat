@@ -144,6 +144,8 @@ export const safety = {
   checkins: () => api('/safety/checkins'),
   schedule: (frequency = 'daily', channel = 'app') =>
     api('/safety/checkins/schedule', { method: 'POST', body: { frequency, channel } }),
+  setCustomTime: (scheduledAt, channel = 'app') =>
+    api('/safety/checkins/custom', { method: 'POST', body: { scheduled_at: scheduledAt, channel } }),
   confirm: (id) => api(`/safety/checkins/${id}/confirm`, { method: 'POST' }),
   panic: (coords = {}) => api('/safety/panic', { method: 'POST', body: coords }),
   hotlines: (country) => api('/safety/hotlines', { query: { country } }),

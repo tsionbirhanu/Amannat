@@ -241,6 +241,87 @@ function registerCapabilities(ai) {
   );
 }
 
+/**
+ * Acoustic echo gate: prevents Voxide from hearing its own voice output
+ * through laptop/phone speakers and creating a feedback loop.
+ */
+function installEchoSuppression(ai) {
+  if (!ai || ai.__echoSuppressionInstalled) return;
+  ai.__echoSuppressionInstalled = true;
+  ai._muteMicUntil = 0;
+
+  // Intercept audio chunk playback to track when assistant audio is active
+  const origPlayAudioChunk = ai._voicePlayAudioChunk;
+  if (typeof origPlayAudioChunk === 'function') {
+    ai._voicePlayAudioChunk = function (base64Data) {
+      this._muteMicUntil = Date.now() + 1200;
+      origPlayAudioChunk.call(this, base64Data);
+
+      if (Array.isArray(this._voiceActiveSources)) {
+        this._voiceActiveSources.forEach((src) => {
+          if (!src.__echoHandled) {
+            src.__echoHandled = true;
+            const prevOnEnded = src.onended;
+            src.onended = () => {
+              if (prevOnEnded) prevOnEnded.call(src);
+              // When audio finishes, keep mic muted for another 500ms for room echo decay
+              this._muteMicUntil = Date.now() + 500;
+            };
+          }
+        });
+      }
+    };
+  }
+
+  const floatTo16BitPCM = (float32Array) => {
+    const buffer = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buffer);
+    for (let i = 0; i < float32Array.length; i++) {
+      const s = Math.max(-1, Math.min(1, float32Array[i]));
+      view.setInt16(i * 2, s < 0 ? s * 32768 : s * 32767, true);
+    }
+    return buffer;
+  };
+
+  const arrayBufferToBase64 = (buffer) => {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  };
+
+  // Intercept _voiceStartMic so microphone data is silenced while assistant speaks
+  const origStartMic = ai._voiceStartMic;
+  if (typeof origStartMic === 'function') {
+    ai._voiceStartMic = async function () {
+      await origStartMic.apply(this, arguments);
+
+      if (this._voiceProcessor) {
+        this._voiceProcessor.onaudioprocess = (e) => {
+          if (this._voiceWs?.readyState !== WebSocket.OPEN) return;
+
+          // Check if the assistant is speaking, playing audio, or in the post-speech echo window
+          const isAssistantSpeaking =
+            (Array.isArray(this._voiceActiveSources) && this._voiceActiveSources.length > 0) ||
+            this._voiceSnapshot?.status === 'speaking' ||
+            (typeof window !== 'undefined' && window.speechSynthesis?.speaking) ||
+            (this._muteMicUntil && Date.now() < this._muteMicUntil);
+
+          if (isAssistantSpeaking) {
+            // Mute/drop microphone input: do not stream speaker output back to the server
+            return;
+          }
+
+          const float32 = e.inputBuffer.getChannelData(0);
+          const pcm16 = floatTo16BitPCM(float32);
+          const b64 = arrayBufferToBase64(pcm16);
+          this._voiceWs.send(JSON.stringify({ type: 'audio_input', data: b64 }));
+        };
+      }
+    };
+  }
+}
+
 let client = null;
 
 /** The shared Voxide client, or null on the server / when no key is configured. */
@@ -248,6 +329,7 @@ export function getVoxide() {
   if (typeof window === 'undefined' || !voxideEnabled) return null;
   if (!client) {
     client = new VoxideClient({ publicKey: VOXIDE_KEY, language: SPEECH_LANG[getLanguage()] || 'en-US' });
+    installEchoSuppression(client);
     registerCapabilities(client);
   }
   return client;

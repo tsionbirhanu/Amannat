@@ -115,6 +115,11 @@ class CheckInScheduleRequest(BaseModel):
     frequency: str
     channel: str
 
+class CheckInCustomRequest(BaseModel):
+    scheduled_at: datetime
+    channel: str = "app"
+
+
 class PanicRequest(BaseModel):
     lat: Optional[float] = None
     lng: Optional[float] = None

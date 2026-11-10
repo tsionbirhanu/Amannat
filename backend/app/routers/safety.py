@@ -7,7 +7,7 @@ import json
 from app.database import get_session
 from app.dependencies import get_current_worker
 from app.models import Worker, CheckIn, Escalation, GuardianContact, utc_now
-from app.schemas import CheckInScheduleRequest, PanicRequest
+from app.schemas import CheckInScheduleRequest, CheckInCustomRequest, PanicRequest
 from app.integrations.sms_gateway import send_alert_sms
 
 router = APIRouter()
@@ -41,6 +41,32 @@ def schedule_checkins(
         session.refresh(c)
     
     return checkins
+
+@router.post("/checkins/custom")
+def set_custom_checkin(
+    request: CheckInCustomRequest,
+    worker: Worker = Depends(get_current_worker),
+    session: Session = Depends(get_session)
+):
+    stmt = select(CheckIn).where(CheckIn.worker_id == worker.id, CheckIn.status == "pending")
+    pending = session.exec(stmt).all()
+    if pending:
+        earliest = min(pending, key=lambda c: c.scheduled_at)
+        earliest.scheduled_at = request.scheduled_at
+        session.add(earliest)
+    else:
+        new_c = CheckIn(
+            worker_id=worker.id,
+            scheduled_at=request.scheduled_at,
+            status="pending",
+            channel=request.channel
+        )
+        session.add(new_c)
+    session.commit()
+
+    statement = select(CheckIn).where(CheckIn.worker_id == worker.id).order_by(CheckIn.scheduled_at.desc())
+    return session.exec(statement).all()
+
 
 @router.post("/checkins/{id}/confirm")
 def confirm_checkin(
