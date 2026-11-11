@@ -88,6 +88,14 @@ export default function AssistantPage() {
     setDraft('');
     setError('');
     if (voxMode) {
+      if (ai && !ai.isInitialized) {
+        try {
+          await ai.init();
+        } catch (err) {
+          setError(err?.message || 'Voxide could not start');
+          return;
+        }
+      }
       // Same session as voice; the agent replies in text and (if connected) out loud
       await vox.sendText(clean);
       return;
@@ -105,11 +113,22 @@ export default function AssistantPage() {
     }
   };
 
-  const listen = () => {
+  const listen = async () => {
     if (voxMode) {
       setError('');
-      if (VOX_LIVE.has(vox.status)) vox.disconnect();
-      else vox.connect();
+      if (VOX_LIVE.has(vox.status)) {
+        vox.disconnect();
+      } else {
+        if (ai && !ai.isInitialized) {
+          try {
+            await ai.init();
+          } catch (err) {
+            setError(err?.message || 'Voxide could not start');
+            return;
+          }
+        }
+        vox.connect();
+      }
       return;
     }
     const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);

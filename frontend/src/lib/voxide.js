@@ -322,6 +322,45 @@ function installEchoSuppression(ai) {
   }
 }
 
+/**
+ * Ensures client.init() is deduplicated and that _voiceConnect automatically awaits init()
+ * rather than throwing "[Voxide] Client not initialized. Call client.init() first."
+ */
+function ensureSafeInit(ai) {
+  if (!ai || ai.__safeInitInstalled) return;
+  ai.__safeInitInstalled = true;
+
+  let inFlightInit = null;
+  const origInit = ai.init;
+  if (typeof origInit === 'function') {
+    ai.init = function () {
+      if (this.isInitialized) return Promise.resolve(this);
+      if (!inFlightInit) {
+        inFlightInit = origInit.apply(this, arguments).finally(() => {
+          inFlightInit = null;
+        });
+      }
+      return inFlightInit;
+    };
+  }
+
+  const origVoiceConnect = ai._voiceConnect;
+  if (typeof origVoiceConnect === 'function') {
+    ai._voiceConnect = async function () {
+      if (!this.isInitialized) {
+        try {
+          await this.init();
+        } catch (err) {
+          console.error('[Voxide] Auto-init before connect failed:', err);
+          this._setVoiceStatus('error');
+          return;
+        }
+      }
+      return origVoiceConnect.apply(this, arguments);
+    };
+  }
+}
+
 let client = null;
 
 /** The shared Voxide client, or null on the server / when no key is configured. */
@@ -329,6 +368,7 @@ export function getVoxide() {
   if (typeof window === 'undefined' || !voxideEnabled) return null;
   if (!client) {
     client = new VoxideClient({ publicKey: VOXIDE_KEY, language: SPEECH_LANG[getLanguage()] || 'en-US' });
+    ensureSafeInit(client);
     installEchoSuppression(client);
     registerCapabilities(client);
   }
